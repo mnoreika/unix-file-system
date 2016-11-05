@@ -16,10 +16,10 @@ int main(int argc, char** argv){
     	print_id(&(root_object.id));
 		printf("\n");
 		
-		struct myfcb the_root_fcb;
-		memset(&the_root_fcb, 0, sizeof(struct myfcb));
+		i_node the_root_fcb;
+		memset(&the_root_fcb, 0, sizeof(i_node));
 		
-		uuid_generate(the_root_fcb.file_data_id);	
+		uuid_generate(the_root_fcb.data_id);	
 		uint8_t data_block[MY_MAX_FILE_SIZE];
 		memset(&data_block, 0, MY_MAX_FILE_SIZE);
 		
@@ -32,14 +32,14 @@ int main(int argc, char** argv){
 		the_root_fcb.size = written;
 		
 		// Store the data object.
-		uuid_t *data_id = &(the_root_fcb.file_data_id);
+		uuid_t *data_id = &(the_root_fcb.data_id);
 		int rc = unqlite_kv_store(pDb,data_id,KEY_SIZE,&data_block,MY_MAX_FILE_SIZE);
 		if( rc != UNQLITE_OK ){
 			error_handler(rc);
 		}
 	
 		// Store the fcb object.
-		rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+		rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(i_node));
 	 	if( rc != UNQLITE_OK ){
    			error_handler(rc);
 		}

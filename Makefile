@@ -29,8 +29,12 @@ $(TARGET4): $(TARGET4).c
 $(TARGET5): $(TARGET5).c
 	gcc -o uuid uuid.c -luuid
 
-.PHONY: clean
+new: clean all env
+
+.PHONY: clean new env
 
 clean:
 	rm -f *.o *~ core myfs.db myfs.log $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(TARGET5)
+
+
 

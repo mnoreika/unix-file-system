@@ -1,3 +1,9 @@
+/*
+  MyFS. One directory, one file, 1000 bytes of storage. What more do you need?
+
+  This Fuse file system is based largely on the HelloWorld example by Miklos Szeredi <miklos@szeredi.hu> (http://fuse.sourceforge.net/helloworld.html). Additional inspiration was taken from Joseph J. Pfeiffer's "Writing a FUSE Filesystem: a Tutorial" (http://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/).
+*/
+
 #define FUSE_USE_VERSION 26
 
 #include <fuse.h>
@@ -6,30 +12,32 @@
 
 #include "myfs.h"
 
-// The one and only fcb that this implmentation will have. We'll keep it in memory. A better
-// implementation would, at the very least, cache it's root directroy in memory.
-struct myfcb the_root_fcb;
+// Storing root directory in memory
+i_node root_node;
 
 // Get file and directory attributes (meta-data).
 // Read 'man 2 stat' and 'man 2 chmod'.
-static int myfs_getattr(const char *path, struct stat *stbuf){
+static int myfs_getattr(const char *path, struct stat *stbuf) {
 	write_log("myfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
 
 	memset(stbuf, 0, sizeof(struct stat));
-	if(strcmp(path, "/")==0){
-		stbuf->st_mode = the_root_fcb.root_mode;
+	if (strcmp(path, "/")==0) {
+		stbuf->st_mode = root_node.mode;
 		stbuf->st_nlink = 2;
-		stbuf->st_uid = the_root_fcb.root_uid;
-		stbuf->st_gid = the_root_fcb.root_gid;
-	}else{
-		if (strcmp(path, the_root_fcb.path) == 0) {
-			stbuf->st_mode = the_root_fcb.mode;
+		stbuf->st_uid = root_node.uid;
+		stbuf->st_gid = root_node.gid;
+
+	} 
+	else {
+
+		if (strcmp(path, root_node.path) == 0) {
+			stbuf->st_mode = root_node.mode;
 			stbuf->st_nlink = 1;
-			stbuf->st_mtime = the_root_fcb.mtime;
-			stbuf->st_ctime = the_root_fcb.ctime;
-			stbuf->st_size = the_root_fcb.size;
-			stbuf->st_uid = the_root_fcb.uid;
-			stbuf->st_gid = the_root_fcb.gid;
+			stbuf->st_mtime = root_node.mtime;
+			stbuf->st_ctime = root_node.ctime;
+			stbuf->st_size = root_node.size;
+			stbuf->st_uid = root_node.uid;
+			stbuf->st_gid = root_node.gid;
 		}else{
 			write_log("myfs_getattr - ENOENT");
 			return -ENOENT;
@@ -56,7 +64,7 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
-	char *pathP = (char*)&(the_root_fcb.path);
+	char *pathP = (char*)&(root_node.path);
 	if(*pathP!='\0'){
 		// drop the leading '/';
 		pathP++;
@@ -74,17 +82,17 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	if(strcmp(path, the_root_fcb.path) != 0){
+	if(strcmp(path, root_node.path) != 0){
 		write_log("myfs_read - ENOENT");
 		return -ENOENT;
 	}
 
-	len = the_root_fcb.size;
+	len = root_node.size;
 
 	uint8_t data_block[MY_MAX_FILE_SIZE];
 
 	memset(&data_block, 0, MY_MAX_FILE_SIZE);
-	uuid_t *data_id = &(the_root_fcb.file_data_id);
+	uuid_t *data_id = &(root_node.data_id);
 	// Is there a data block?
 	if(uuid_compare(zero_uuid,*data_id)!=0){
 		unqlite_int64 nBytes;  //Data length.
@@ -116,7 +124,7 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi){
     write_log("myfs_create(path=\"%s\", mode=0%03o, fi=0x%08x)\n", path, mode, fi);
 
-    if(the_root_fcb.path[0] != '\0'){
+    if(root_node.path[0] != '\0'){
 		write_log("myfs_create - ENOSPC");
 		return -ENOSPC;
 	}
@@ -126,13 +134,13 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 		write_log("myfs_create - ENAMETOOLONG");
 		return -ENAMETOOLONG;
 	}
-	sprintf(the_root_fcb.path,path);
+	sprintf(root_node.path,path);
 	struct fuse_context *context = fuse_get_context();
-	the_root_fcb.uid=context->uid;
-	the_root_fcb.gid=context->gid;
-	the_root_fcb.mode=mode|S_IFREG;
+	root_node.uid=context->uid;
+	root_node.gid=context->gid;
+	root_node.mode=mode|S_IFREG;
 
-	int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+	int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
 	if( rc != UNQLITE_OK ){
 		write_log("myfs_create - EIO");
 		return -EIO;
@@ -146,14 +154,14 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 static int myfs_utime(const char *path, struct utimbuf *ubuf){
     write_log("myfs_utime(path=\"%s\", ubuf=0x%08x)\n", path, ubuf);
 
-	if(strcmp(path, the_root_fcb.path) != 0){
+	if(strcmp(path, root_node.path) != 0){
 		write_log("myfs_utime - ENOENT");
 		return -ENOENT;
 	}
-	the_root_fcb.mtime=ubuf->modtime;
+	root_node.mtime=ubuf->modtime;
 
 	// Write the fcb to the store.
-    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
 	if( rc != UNQLITE_OK ){
 		write_log("myfs_write - EIO");
 		return -EIO;
@@ -167,7 +175,7 @@ static int myfs_utime(const char *path, struct utimbuf *ubuf){
 static int myfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
     write_log("myfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	if(strcmp(path, the_root_fcb.path) != 0){
+	if(strcmp(path, root_node.path) != 0){
 		write_log("myfs_write - ENOENT");
 		return -ENOENT;
     }
@@ -180,11 +188,11 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	uint8_t data_block[MY_MAX_FILE_SIZE];
 
 	memset(&data_block, 0, MY_MAX_FILE_SIZE);
-	uuid_t *data_id = &(the_root_fcb.file_data_id);
+	uuid_t *data_id = &(root_node.data_id);
 	// Is there a data block?
 	if(uuid_compare(zero_uuid,*data_id)==0){
 		// GEnerate a UUID fo rhte data blocl. We'll write the block itself later.
-		uuid_generate(the_root_fcb.file_data_id);
+		uuid_generate(root_node.data_id);
 	}else{
 		// First we will check the size of the obejct in the store to ensure that we won't overflow the buffer.
 		unqlite_int64 nBytes;  // Data length.
@@ -210,13 +218,13 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	}
 
 	// Update the fcb in-memory.
-	the_root_fcb.size=written;
+	root_node.size=written;
 	time_t now = time(NULL);
-	the_root_fcb.mtime=now;
-	the_root_fcb.ctime=now;
+	root_node.mtime=now;
+	root_node.ctime=now;
 
 	// Write the fcb to the store.
-    rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+    rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
 	if( rc != UNQLITE_OK ){
 		write_log("myfs_write - EIO");
 		return -EIO;
@@ -235,10 +243,10 @@ int myfs_truncate(const char *path, off_t newsize){
 		return -EFBIG;
 	}
 
-	the_root_fcb.size = newsize;
+	root_node.size = newsize;
 
 	// Write the fcb to the store.
-    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
 	if( rc != UNQLITE_OK ){
 		write_log("myfs_write - EIO");
 		return -EIO;
@@ -311,7 +319,7 @@ int myfs_release(const char *path, struct fuse_file_info *fi){
 // Open a file. Open should check if the operation is permitted for the given flags (fi->flags).
 // Read 'man 2 open'.
 static int myfs_open(const char *path, struct fuse_file_info *fi){
-	if (strcmp(path, the_root_fcb.path) != 0)
+	if (strcmp(path, root_node.path) != 0)
 		return -ENOENT;
 
 	write_log("myfs_open(path\"%s\", fi=0x%08x)\n", path, fi);
@@ -341,6 +349,7 @@ static struct fuse_operations myfs_oper = {
 void init_fs(){
 	int rc;
 	printf("init_fs\n");
+
 	//Initialise the store.
 	init_store();
   
@@ -354,29 +363,30 @@ void init_fs(){
 		if( rc != UNQLITE_OK ){
 		  error_handler(rc);
 		}
-		if(nBytes!=sizeof(struct myfcb)){
+		if(nBytes!=sizeof(i_node)){
 			printf("Data object has unexpected size. Doing nothing.\n");
 			exit(-1);
 		}
 
 		//Fetch the fcb that the root object points at. We will probably need it.
-		unqlite_kv_fetch(pDb,data_id,KEY_SIZE,&the_root_fcb,&nBytes);
+		unqlite_kv_fetch(pDb,data_id,KEY_SIZE,&root_node,&nBytes);
 	}else{
+
 		printf("init_fs: root is empty\n");
 		//Initialise and store an empty root fcb.
-		memset(&the_root_fcb, 0, sizeof(struct myfcb));
+		memset(&root_node, 0, sizeof(i_node));
 
 		//See 'man 2 stat' and 'man 2 chmod'.
-		the_root_fcb.root_mode |= S_IFDIR|S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
-		the_root_fcb.root_mtime = time(0);
-		the_root_fcb.root_uid = getuid();
-		the_root_fcb.root_gid = getgid();
+		root_node.mode |= S_IFDIR|S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
+		root_node.mtime = time(0);
+		root_node.uid = getuid();
+		root_node.gid = getgid();
 
-		//Generate a key for the_root_fcb and update the root object.
+		//Generate a key for root_node and update the root object.
 		uuid_generate(root_object.id);
 
 		printf("init_fs: writing root fcb\n");
-		rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&the_root_fcb,sizeof(struct myfcb));
+		rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
 		if( rc != UNQLITE_OK ){
    			error_handler(rc);
 		}

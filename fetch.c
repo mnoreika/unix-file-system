@@ -17,12 +17,12 @@ int main(int argc, char** argv){
 		if( rc != UNQLITE_OK ){
 		  error_handler(rc);
 		}
-		if(nBytes!=sizeof(struct myfcb)){
+		if(nBytes!=sizeof(i_node)){
 			printf("Data object has unexpected size. Doing nothing.\n");
 			exit(-1);
 		}
 
-		struct myfcb the_root_fcb;
+		i_node the_root_fcb;
 	
 		// Fetch the fcb.
 		unqlite_kv_fetch(pDb,dataid,KEY_SIZE,&the_root_fcb,&nBytes);
@@ -36,7 +36,7 @@ int main(int argc, char** argv){
 		uint8_t data_block[MY_MAX_FILE_SIZE];
 		memset(&data_block, 0, MY_MAX_FILE_SIZE);
 		nBytes = MY_MAX_FILE_SIZE;
-		unqlite_kv_fetch(pDb,&(the_root_fcb.file_data_id),KEY_SIZE,&data_block,&nBytes);
+		unqlite_kv_fetch(pDb,&(the_root_fcb.data_id),KEY_SIZE,&data_block,&nBytes);
 		// Write the data.
 		printf("\ndata: %s\n", data_block);
 	}else{
