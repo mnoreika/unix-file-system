@@ -1,0 +1,5 @@
+myfs_getattr(path="/.Trash", statbuf=0xdd292c10)
+myfs_getattr - ENOENTmyfs_getattr(path="/.Trash-18197", statbuf=0xdca91c10)
+myfs_getattr - ENOENTmyfs_getattr(path="/.Trash", statbuf=0xdd292c10)
+myfs_getattr - ENOENTmyfs_getattr(path="/.Trash-18197", statbuf=0xdca91c10)
+myfs_getattr - ENOENT
