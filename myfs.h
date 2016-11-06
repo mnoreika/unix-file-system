@@ -2,12 +2,15 @@
 
 #define MY_MAX_PATH 100
 #define MY_MAX_FILE_SIZE 1000
+#define MAX_ENTRY_SIZE 10
+#define MAX_PATH_SIZE 255
 
-// Index node data structure, which contains meta information about the file
+// Index node data struct, which contains meta information about the file
 typedef struct inode_struct {
+	uuid_t id; /* unique id of the current file */
 	uuid_t data_id; /* unique file data id */
 
-	char path[255]; 	/* path to the file */
+	char path[MAX_ENTRY_SIZE];
 
 	uid_t  uid;		/* user */
     gid_t  gid;		/* group */
@@ -19,25 +22,12 @@ typedef struct inode_struct {
 
 } i_node;
 
-
-
-// // Old version
-// struct myfcb{
-// 	char path[255];
-// 	uuid_t file_data_id;
+// Directory file control block, which contains a key to the targeted directory and its entries
+typedef struct dir_fcb {
+	uuid_t id;
+	uuid_t data_id;
 	
-// 	// see 'man 2 stat' and 'man 2 chmod'
-// 	//meta-data for the 'file'
-// 	uid_t  uid;		/* user */
-//   	gid_t  gid;		/* group */
-// 	mode_t mode;	/* protection */
-// 	time_t mtime;	/* time of last modification */
-// 	time_t ctime;	/* time of last change to meta-data (status) */
-// 	off_t size;		/* size */
-	
-// 	//meta-data for the root thing (directory)
-// 	uid_t  root_uid;		/* user */
-//     gid_t  root_gid;		/* group */
-// 	mode_t root_mode;	/* protection */
-// 	time_t root_mtime;	/* time of last modification */
-// };
+	char entryNames[MAX_ENTRY_SIZE][MAX_PATH_SIZE];
+	uuid_t entryIds[MAX_ENTRY_SIZE];
+
+} dir_fcb;
