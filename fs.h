@@ -23,7 +23,7 @@ extern unqlite_int64 root_object_size_value;
 
 typedef struct rootS{
 	uuid_t id;
-}*root;
+} *root;
 
 extern unqlite *pDb;
 extern struct rootS root_object;

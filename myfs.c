@@ -1,15 +1,11 @@
-/*
-  MyFS. One directory, one file, 1000 bytes of storage. What more do you need?
-
-  This Fuse file system is based largely on the HelloWorld example by Miklos Szeredi <miklos@szeredi.hu> (http://fuse.sourceforge.net/helloworld.html). Additional inspiration was taken from Joseph J. Pfeiffer's "Writing a FUSE Filesystem: a Tutorial" (http://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/).
-*/
-
 #define FUSE_USE_VERSION 26
 #define ARROW "->"
 
 #include <fuse.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "myfs.h"
 
@@ -19,9 +15,10 @@ i_node root_node;
 // Get file and directory attributes (meta-data).
 // Read 'man 2 stat' and 'man 2 chmod'. IMPLEMENT
 static int myfs_getattr(const char *path, struct stat *stbuf) {
-	write_log("myfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
+	write_log("\nmyfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
 
 	memset(stbuf, 0, sizeof(struct stat));
+	
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = root_node.mode;
 		stbuf->st_nlink = 2;
@@ -29,7 +26,54 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		stbuf->st_gid = root_node.gid;
 	} 
 	else {
+		write_log("\ngetAttr -> fetching the fcb of root", path, stbuf);
 
+		unqlite_int64 nBytes;
+		int rc = unqlite_kv_fetch (pDb, root_node.data_id, KEY_SIZE, NULL, &nBytes);
+
+		if(rc != UNQLITE_OK || nBytes != sizeof(dir_fcb)) {
+				write_log("myfs_database error - cannot fetch dir fcb");
+				return -EIO;
+		}
+
+
+		dir_fcb root_fcb;  
+		rc = unqlite_kv_fetch (pDb, root_node.data_id, KEY_SIZE, &root_fcb, &nBytes);
+
+		write_log("\n getAttr -> looking for directory", path, stbuf);
+
+		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+			write_log("\ngetAttr: looping fcb and looking for occupied dir %s\n",path);
+
+			//write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
+
+			write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
+			write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryIds[i]);
+
+			int a = strcmp(&root_fcb.entryNames[i], "");
+			
+			write_log("\ngetAttr: printing a %d\n", a);
+		
+
+			if (a != 0) {
+				write_log("hello");
+				write_log("\ngetAttr -> found directory in fcb root", path, stbuf);
+				write_log("hello");
+				// stbuf->st_mode = root_node.mode;
+				// stbuf->st_nlink = 2;
+				// stbuf->st_uid = root_node.uid;
+				// stbuf->st_gid = root_node.gid;
+
+				return -ENOENT;
+			}
+			
+		}
+
+		write_log("\ngetAttr -> directory not found", path, stbuf);
+		write_log("\nmyfs_getattr - ENOENT");
+		return -ENOENT;
+ 
+		
 		if (strstr(path, "/") == 0) {
 			write_log("READING DIRECTORY ATTR", path, stbuf);
 			stbuf->st_mode = root_node.mode;
@@ -117,7 +161,7 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	// } else
 	// 	size = 0;
 
-	// return size;
+	return -ENOENT;
 }
 
 // This file system only supports one file. Create should fail if a file has been created. Path must be '/<something>'.
@@ -198,10 +242,10 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	// 	// First we will check the size of the obejct in the store to ensure that we won't overflow the buffer.
 	// 	unqlite_int64 nBytes;  // Data length.
 	// 	int rc = unqlite_kv_fetch(pDb,data_id,KEY_SIZE,NULL,&nBytes);
-		// if( rc!=UNQLITE_OK || nBytes!=MY_MAX_FILE_SIZE){
-		// 	write_log("myfs_write - EIO");
-		// 	return -EIO;
-		// }
+	// 	if( rc!=UNQLITE_OK || nBytes!=MY_MAX_FILE_SIZE){
+	// 		write_log("myfs_write - EIO");
+	// 		return -EIO;
+	// 	}
 
 	// 	// Fetch the data block from the store.
 	// 	unqlite_kv_fetch(pDb,data_id,KEY_SIZE,&data_block,&nBytes);
@@ -231,7 +275,7 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	// 	return -EIO;
 	// }
 
-    return 0; //return written
+    return -ENOENT; //return written
 }
 
 // Set the size of a file.
@@ -274,22 +318,30 @@ int myfs_chown(const char *path, uid_t uid, gid_t gid){
 
 // Create a directory IMPLEMENT
 int myfs_mkdir(const char *path, mode_t mode) {
-	write_log("myfs_mkdir: %s\n",path);
+	write_log("\nmyfs_mkdir : %s\n",path);
 
 	int pathlen = strlen(path);
 
 	// Returning an error if the directory path is too long
-	if (pathlen >= MAX_PATH_SIZE) {
-		write_log("myfs_create - ENAMETOOLONG");
+	if (pathlen >= MAX_NAME_SIZE) {
+		write_log("\nmyfs_create - ENAMETOOLONG");
 		return -ENAMETOOLONG;
 	}
 
 	// Find directory that is the parent directory ! IMPLEMENT !
 	i_node parent = root_node;
 
+
 	// Creating an inode for the next directory
+	write_log("\nmyfs_mkdir: creating a new i_node for the new directory %s\n",path);
+
 	i_node new_dir;
+
 	uuid_generate(new_dir.id);
+	
+
+	write_log("\nmyfs_mkdir: copying context to the dir inode %s\n",path);
+
 
 	// Getting context of the current environment
 	struct fuse_context *context = fuse_get_context();
@@ -299,39 +351,51 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	new_dir.gid = context->gid;
 	new_dir.mode = mode | S_IFDIR;
 
+	write_log("\nmyfs_mkdir: storing the inode in to the database %s\n",path);
+
 	// Storing the inode of the new directory in the database
-	int rc = unqlite_kv_store(pDb, new_dir.id, KEY_SIZE, &new_dir, sizeof(i_node));
+	int rc = unqlite_kv_store(pDb, new_dir.id, KEY_SIZE, &new_dir, sizeof(new_dir));
 
 	if( rc != UNQLITE_OK ) {
-		write_log("myfs_create - EIO");
+		write_log("\nmyfs_create - storing of new dir inode failed");
 		return -EIO;
 	}
+
+	write_log("\nmyfs_mkdir: adding new directory entry to the parent directory %s\n",path);
 
 	// Adding the new directory as an entry in the parent directory
 	unqlite_int64 nBytes;
 	rc = unqlite_kv_fetch (pDb, parent.data_id, KEY_SIZE, NULL, &nBytes);
 
 	if(rc != UNQLITE_OK || nBytes != sizeof(dir_fcb)){
-			write_log("myfs_write - EIO");
+			write_log("\nmyfs_write - error fetching the parent fcb");
 			return -EIO;
 	}
 
 	dir_fcb parent_fcb;  
 	rc = unqlite_kv_fetch (pDb, parent.data_id, KEY_SIZE, &parent_fcb, &nBytes);
 
+	write_log("\nmyfs_mkdir: looping fcb and looking for empty dir entry %s\n",path);
+
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
-			strcpy(parent_fcb.entryNames[i], "directoryName");
+		if (strcmp("", &parent_fcb.entryNames[i]) == 0) {
+			strcpy(&parent_fcb.entryNames[i], "nameone");
 			uuid_copy(new_dir.id, parent_fcb.entryIds[i]);
+			write_log("\nmyfs_mkdir: dir entry has been found and occupied %s\n",path);
+			break;
 		}
 	}
+
+	write_log("\nmyfs_mkdir: name of the dir:  %s\n", &parent_fcb.entryNames[0]);
 
 	rc = unqlite_kv_store(pDb, parent.data_id, KEY_SIZE, &parent_fcb, sizeof(parent_fcb));
 
 	if( rc != UNQLITE_OK ) {
-		write_log("myfs_create - EIO");
+		write_log("myfs_create - error storing parent directory fcb");
 		return -EIO;
-	}
+	}	
+
+	write_log("\nmyfs_mkdir: directory created! %s\n",path);
 
     return 0;
 }
@@ -397,7 +461,7 @@ static struct fuse_operations myfs_oper = {
 	.truncate	= myfs_truncate,
 	.flush		= myfs_flush,
 	.release	= myfs_release,
-	.mkdir = myfs_mkdir,
+	.mkdir 		= myfs_mkdir,
 
 };
 
@@ -440,7 +504,7 @@ void init_fs() {
 		memset(&root_node, 0, sizeof(i_node));
 
 		// See 'man 2 stat' and 'man 2 chmod'.
-		root_node.mode |= S_IFDIR|S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
+		root_node.mode |= S_IFDIR | S_IRUSR | S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
 		root_node.mtime = time(0);
 		root_node.uid = getuid();
 		root_node.gid = getgid();
@@ -454,20 +518,20 @@ void init_fs() {
 		// Make new directory fcb 
 		dir_fcb entries;
 
-		uuid_copy(entries.id, root_node.data_id);
-
 		memset(&entries, 0, sizeof(entries));
+
+		uuid_copy(entries.id, root_node.data_id);
 
 		// Store directory fcb in the database
 		printf("init_fs: writing root entries fcb\n");
-		rc = unqlite_kv_store (pDb, &(entries.id), KEY_SIZE, &entries, sizeof(entries));
+		rc = unqlite_kv_store (pDb, entries.id, KEY_SIZE, &entries, sizeof(entries));
 		if( rc != UNQLITE_OK ){
    			error_handler(rc);
 		}
 		
 
 		printf("init_fs: writing root fcb\n");
-		rc = unqlite_kv_store(pDb, &(root_object.id), KEY_SIZE, &root_node, sizeof(i_node));
+		rc = unqlite_kv_store(pDb, root_object.id, KEY_SIZE, &root_node, sizeof(i_node));
 		if( rc != UNQLITE_OK ){
    			error_handler(rc);
 		}
