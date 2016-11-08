@@ -27,7 +27,7 @@ typedef struct inode_struct {
 typedef struct dir_fcb {
 	uuid_t id;
 	
-	char entryNames[MAX_ENTRY_SIZE];
+	char entryNames[MAX_NAME_SIZE];
 	uuid_t entryIds[MAX_ENTRY_SIZE];
 
 } dir_fcb;

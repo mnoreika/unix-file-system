@@ -12,8 +12,27 @@
 // Storing root directory in memory
 i_node root_node;
 
-// Get file and directory attributes (meta-data).
-// Read 'man 2 stat' and 'man 2 chmod'. IMPLEMENT
+// Fetching data from the database
+int fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
+
+	// Trying to fetch from the database
+	unqlite_int64 nBytes;
+	int rc = unqlite_kv_fetch (pDb, data_id, KEY_SIZE, NULL, &nBytes);
+
+	// Handling errors in case of unable to fetch
+	if (rc != UNQLITE_OK || nBytes != size) {
+			write_log("myfs_database error - cannot fetch file");
+			error_handler(rc);
+			return -EIO;
+	}
+
+	// Actually fetching the data 
+	rc = unqlite_kv_fetch (pDb, data_id, KEY_SIZE, dataStorage, &nBytes);
+}
+
+
+
+// Get file and directory attributes (meta-data)
 static int myfs_getattr(const char *path, struct stat *stbuf) {
 	write_log("\nmyfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
 
@@ -24,6 +43,8 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		stbuf->st_nlink = 2;
 		stbuf->st_uid = root_node.uid;
 		stbuf->st_gid = root_node.gid;
+
+		return 0;
 	} 
 	else {
 		write_log("\ngetAttr -> fetching the fcb of root", path, stbuf);
@@ -48,48 +69,25 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 			//write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
 
 			write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
-			write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryIds[i]);
+	
 
-			int a = strcmp(&root_fcb.entryNames[i], "");
-			
-			write_log("\ngetAttr: printing a %d\n", a);
-		
-
-			if (a != 0) {
-				write_log("hello");
+			if (strcmp(&root_fcb.entryNames[i], "") != 0) {
 				write_log("\ngetAttr -> found directory in fcb root", path, stbuf);
-				write_log("hello");
-				// stbuf->st_mode = root_node.mode;
-				// stbuf->st_nlink = 2;
-				// stbuf->st_uid = root_node.uid;
-				// stbuf->st_gid = root_node.gid;
+				
+				 stbuf->st_mode = root_node.mode;
+				 stbuf->st_nlink = 2;
+				 stbuf->st_uid = root_node.uid;
+				 stbuf->st_gid = root_node.gid;
 
-				return -ENOENT;
+				return 0;
 			}
-			
 		}
+			
 
 		write_log("\ngetAttr -> directory not found", path, stbuf);
 		write_log("\nmyfs_getattr - ENOENT");
 		return -ENOENT;
- 
-		
-		if (strstr(path, "/") == 0) {
-			write_log("READING DIRECTORY ATTR", path, stbuf);
-			stbuf->st_mode = root_node.mode;
-			stbuf->st_nlink = 1;
-			stbuf->st_mtime = root_node.mtime;
-			stbuf->st_ctime = root_node.ctime;
-			stbuf->st_size = root_node.size;
-			stbuf->st_uid = root_node.uid;
-			stbuf->st_gid = root_node.gid;
-		}else{
-			write_log("myfs_getattr - ENOENT");
-			return -ENOENT;
-		}
 	}
-
-	return 0;
 }
 
 // Read a directory.

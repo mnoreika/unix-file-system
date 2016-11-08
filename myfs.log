@@ -1,5 +1,5 @@
 
-myfs_getattr(path="/.Trash", statbuf=0x5212ec10)
+myfs_getattr(path="/.Trash", statbuf=0xbff38c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -7,85 +7,45 @@ getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
 
 getAttr -> directory not found
 myfs_getattr - ENOENT
-myfs_getattr(path="/.Trash-18197", statbuf=0x5192dc10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xbf737c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -93,85 +53,45 @@ getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
 
 getAttr -> directory not found
 myfs_getattr - ENOENT
-myfs_getattr(path="/.Trash", statbuf=0x5212ec10)
+myfs_getattr(path="/.Trash", statbuf=0xbff38c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -179,85 +99,45 @@ getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
 getAttr: looping fcb and looking for occupied dir /.Trash
 
 getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
 
 getAttr -> directory not found
 myfs_getattr - ENOENT
-myfs_getattr(path="/.Trash-18197", statbuf=0x5192dc10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xbf737c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -265,87 +145,47 @@ getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
 getAttr: looping fcb and looking for occupied dir /.Trash-18197
 
 getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /.Trash-18197
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
 
 getAttr -> directory not found
 myfs_getattr - ENOENT
-myfs_getattr(path="/", statbuf=0x5212ebe0)
+myfs_getattr(path="/", statbuf=0xbff38be0)
 
-myfs_getattr(path="/a", statbuf=0x5192dc10)
+myfs_getattr(path="/a", statbuf=0xbf737c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -353,81 +193,41 @@ getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /a
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /a
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /a
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
+getAttr: looping fcb and looking for occupied dir /a
 
-getAttr: printing a 0
+getAttr: printing dir name 
 
 getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
 
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
 getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /a
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /a
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /a
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
-
-getAttr: looping fcb and looking for occupied dir /a
-
-getAttr: printing dir name 
-
-getAttr: printing dir name 
-
-getAttr: printing a 0
 
 getAttr -> directory not found
 myfs_getattr - ENOENT
@@ -449,7 +249,7 @@ myfs_mkdir: name of the dir:  nameone
 
 myfs_mkdir: directory created! /a
 
-myfs_getattr(path="/a", statbuf=0x5212ec10)
+myfs_getattr(path="/a", statbuf=0xbff38c10)
 
 getAttr -> fetching the fcb of root
  getAttr -> looking for directory
@@ -457,7 +257,6 @@ getAttr: looping fcb and looking for occupied dir /a
 
 getAttr: printing dir name nameone
 
-getAttr: printing dir name 
-
-getAttr: printing a 110
-hello
+getAttr -> found directory in fcb root
+myfs_getattr(path="/", statbuf=0xbff38be0)
+write_readdir(path="/", buf=0xb0000990, filler=0xc0a2dc00, offset=0, fi=0xbf737c00)
