@@ -13,7 +13,7 @@
 i_node root_node;
 
 // Fetching data from the database
-int fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
+void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 
 	// Trying to fetch from the database
 	unqlite_int64 nBytes;
@@ -21,15 +21,22 @@ int fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 
 	// Handling errors in case of unable to fetch
 	if (rc != UNQLITE_OK || nBytes != size) {
-			write_log("myfs_database error - cannot fetch file");
+			write_log("myfs_database error - cannot fetch data");
 			error_handler(rc);
-			return -EIO;
 	}
 
 	// Actually fetching the data 
 	rc = unqlite_kv_fetch (pDb, data_id, KEY_SIZE, dataStorage, &nBytes);
 }
 
+void store_data(uuid_t data_id, void* data, size_t size) {
+	int rc = unqlite_kv_store(pDb, data_id, KEY_SIZE, data, size);
+
+	if( rc != UNQLITE_OK ) {
+		write_log("\nmyfs_create - storing of the data failed");
+		error_handler(rc);
+	}
+}
 
 
 // Get file and directory attributes (meta-data)
@@ -47,32 +54,15 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		return 0;
 	} 
 	else {
-		write_log("\ngetAttr -> fetching the fcb of root", path, stbuf);
-
-		unqlite_int64 nBytes;
-		int rc = unqlite_kv_fetch (pDb, root_node.data_id, KEY_SIZE, NULL, &nBytes);
-
-		if(rc != UNQLITE_OK || nBytes != sizeof(dir_fcb)) {
-				write_log("myfs_database error - cannot fetch dir fcb");
-				return -EIO;
-		}
-
 
 		dir_fcb root_fcb;  
-		rc = unqlite_kv_fetch (pDb, root_node.data_id, KEY_SIZE, &root_fcb, &nBytes);
-
-		write_log("\n getAttr -> looking for directory", path, stbuf);
+		
+		fetch_data(root_node.data_id, &root_fcb, sizeof(dir_fcb));
 
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-			write_log("\ngetAttr: looping fcb and looking for occupied dir %s\n",path);
 
-			//write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
-
-			write_log("\ngetAttr: printing dir name %s\n", &root_fcb.entryNames[i]);
-	
-
-			if (strcmp(&root_fcb.entryNames[i], "") != 0) {
-				write_log("\ngetAttr -> found directory in fcb root", path, stbuf);
+			if (strcmp(root_fcb.entryNames[i], "") != 0) {
+				write_log("\ngetAttr -> found directory in fcb root with name: %s", root_fcb.entryNames[i]);
 				
 				 stbuf->st_mode = root_node.mode;
 				 stbuf->st_nlink = 2;
@@ -82,10 +72,9 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 				return 0;
 			}
 		}
-			
 
 		write_log("\ngetAttr -> directory not found", path, stbuf);
-		write_log("\nmyfs_getattr - ENOENT");
+
 		return -ENOENT;
 	}
 }
@@ -99,19 +88,33 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 	write_log("write_readdir(path=\"%s\", buf=0x%08x, filler=0x%08x, offset=%lld, fi=0x%08x)\n", path, buf, filler, offset, fi);
 
 	// This implementation supports only a root directory so return an error if the path is not '/'.
-	if (strcmp(path, "/") != 0){
-		write_log("myfs_readdir - ENOENT");
-		return -ENOENT;
-	}
+	// if (strcmp(path, "/") != 0){
+	// 	write_log("myfs_readdir - ENOENT");
+	// 	return -ENOENT;
+	// }
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
+
+	filler(buf, "abc", NULL, 0);
 
 	char *pathP = (char*)&(root_node.path);
 	if(*pathP!='\0'){
 		// drop the leading '/';
 		pathP++;
 		filler(buf, pathP, NULL, 0);
+	}
+
+	// Finding the parent
+	i_node parent = root_node;
+
+	dir_fcb parent_dir_fcb;
+
+	fetch_data(root_node.data_id, &parent_dir_fcb, sizeof(dir_fcb));
+
+	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+		if (strncmp(parent_dir_fcb.entryNames[i], "", MAX_NAME_SIZE) != 0)
+		filler(buf, "a", NULL, 0);
 	}
 
 	return 0;
@@ -331,15 +334,9 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 
 	// Creating an inode for the next directory
-	write_log("\nmyfs_mkdir: creating a new i_node for the new directory %s\n",path);
-
 	i_node new_dir;
 
 	uuid_generate(new_dir.id);
-	
-
-	write_log("\nmyfs_mkdir: copying context to the dir inode %s\n",path);
-
 
 	// Getting context of the current environment
 	struct fuse_context *context = fuse_get_context();
@@ -349,51 +346,32 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	new_dir.gid = context->gid;
 	new_dir.mode = mode | S_IFDIR;
 
-	write_log("\nmyfs_mkdir: storing the inode in to the database %s\n",path);
-
 	// Storing the inode of the new directory in the database
-	int rc = unqlite_kv_store(pDb, new_dir.id, KEY_SIZE, &new_dir, sizeof(new_dir));
-
-	if( rc != UNQLITE_OK ) {
-		write_log("\nmyfs_create - storing of new dir inode failed");
-		return -EIO;
-	}
-
-	write_log("\nmyfs_mkdir: adding new directory entry to the parent directory %s\n",path);
+	store_data(new_dir.id, &new_dir, sizeof(i_node));
 
 	// Adding the new directory as an entry in the parent directory
-	unqlite_int64 nBytes;
-	rc = unqlite_kv_fetch (pDb, parent.data_id, KEY_SIZE, NULL, &nBytes);
-
-	if(rc != UNQLITE_OK || nBytes != sizeof(dir_fcb)){
-			write_log("\nmyfs_write - error fetching the parent fcb");
-			return -EIO;
-	}
-
 	dir_fcb parent_fcb;  
-	rc = unqlite_kv_fetch (pDb, parent.data_id, KEY_SIZE, &parent_fcb, &nBytes);
 
-	write_log("\nmyfs_mkdir: looping fcb and looking for empty dir entry %s\n",path);
+	fetch_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
 
+	// Finding an empty entry space
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-		if (strcmp("", &parent_fcb.entryNames[i]) == 0) {
-			strcpy(&parent_fcb.entryNames[i], "nameone");
-			uuid_copy(new_dir.id, parent_fcb.entryIds[i]);
-			write_log("\nmyfs_mkdir: dir entry has been found and occupied %s\n",path);
+
+		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
+
+			strcpy(parent_fcb.entryNames[i], "nameone");
+			uuid_copy(parent_fcb.entryIds[i], new_dir.id);
+			write_log("\nmyfs_mkdir: dir entry has been found and occupied");
+
+			write_log("\nmyfs_mkdir: name of the dir:  %s\n", &parent_fcb.entryNames[i]);
 			break;
 		}
+
 	}
 
-	write_log("\nmyfs_mkdir: name of the dir:  %s\n", &parent_fcb.entryNames[0]);
+	store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
 
-	rc = unqlite_kv_store(pDb, parent.data_id, KEY_SIZE, &parent_fcb, sizeof(parent_fcb));
-
-	if( rc != UNQLITE_OK ) {
-		write_log("myfs_create - error storing parent directory fcb");
-		return -EIO;
-	}	
-
-	write_log("\nmyfs_mkdir: directory created! %s\n",path);
+	write_log("\nmyfs_mkdir: directory created!");
 
     return 0;
 }

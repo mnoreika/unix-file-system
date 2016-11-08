@@ -19,7 +19,7 @@ typedef struct inode_struct {
 	time_t atime;   /* time of last access */
 	time_t mtime;	/* time of last modification */
 	time_t ctime;	/* time of last change to meta-data (status) */
-	off_t size;		/* size */
+	off_t size;		/* size of the data */
 
 } i_node;
 
@@ -27,7 +27,7 @@ typedef struct inode_struct {
 typedef struct dir_fcb {
 	uuid_t id;
 	
-	char entryNames[MAX_NAME_SIZE];
+	char entryNames[MAX_ENTRY_SIZE][MAX_NAME_SIZE];
 	uuid_t entryIds[MAX_ENTRY_SIZE];
 
 } dir_fcb;
