@@ -1,46 +1,110 @@
 
-myfs_getattr(path="/.Trash", statbuf=0xc4b48c10)
+myfs_getattr(path="/.Trash", statbuf=0x5faebc10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0xbfffec10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x5faebc10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash", statbuf=0xc4b48c10)
+myfs_getattr(path="/.Trash", statbuf=0x5f2eac10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0xbfffec10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x5faebc10)
 
 getAttr -> directory not found
-myfs_getattr(path="/", statbuf=0xc4b48be0)
+myfs_getattr(path="/", statbuf=0x5f2eabe0)
+write_readdir(path="/", buf=0x58000b00, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
 
-myfs_getattr(path="/", statbuf=0xc4b48be0)
-write_readdir(path="/", buf=0xb8000990, filler=0xc563dc00, offset=0, fi=0xbfffec00)
-
-myfs_getattr(path="/a", statbuf=0xc4b48c10)
+getAttr -> current dir name: 
+myfs_getattr(path="/a", statbuf=0x5faebc10)
 
 getAttr -> directory not found
 myfs_mkdir : /a
 
+myfs_mkdir: directory created!
 myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  nameone
+myfs_mkdir: name of the dir:  a
+
+myfs_mkdir: directory a created!
+myfs_getattr(path="/a", statbuf=0x5f2eac10)
+
+getAttr -> found directory in fcb root with name: a
+myfs_getattr(path="/", statbuf=0x5f2eabe0)
+write_readdir(path="/", buf=0x58000b00, filler=0x605e0c00, offset=0, fi=0x5faebc00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/b", statbuf=0x5f2eac10)
+
+getAttr -> found directory in fcb root with name: a
+getAttr -> directory not found
+myfs_mkdir : /b
 
 myfs_mkdir: directory created!
-myfs_getattr(path="/a", statbuf=0xbfffec10)
+myfs_mkdir: dir entry has been found and occupied
+myfs_mkdir: name of the dir:  b
 
-getAttr -> found directory in fcb root with name: nameone
-myfs_getattr(path="/", statbuf=0xbfffebe0)
-write_readdir(path="/", buf=0xc0000b00, filler=0xc563dc00, offset=0, fi=0xc4b48c00)
+myfs_mkdir: directory b created!
+myfs_getattr(path="/b", statbuf=0x5faebc10)
 
-myfs_getattr(path="/", statbuf=0xc4b48be0)
-write_readdir(path="/", buf=0xb8000990, filler=0xc563dc00, offset=0, fi=0xbfffec00)
+getAttr -> found directory in fcb root with name: a
+getAttr -> found directory in fcb root with name: b
+myfs_getattr(path="/", statbuf=0x5faebbe0)
+write_readdir(path="/", buf=0x50000990, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
 
-myfs_getattr(path="/", statbuf=0xbfffebe0)
-write_readdir(path="/", buf=0xc0000b00, filler=0xc563dc00, offset=0, fi=0xc4b48c00)
+getAttr -> current dir name: a
+myfs_getattr(path="/c", statbuf=0x5faebc10)
 
-myfs_getattr(path="/", statbuf=0xbfffebe0)
+getAttr -> found directory in fcb root with name: a
+getAttr -> found directory in fcb root with name: b
+getAttr -> directory not found
+myfs_mkdir : /c
 
-myfs_getattr(path="/abc", statbuf=0xbfffec10)
+myfs_mkdir: directory created!
+myfs_mkdir: dir entry has been found and occupied
+myfs_mkdir: name of the dir:  c
 
-getAttr -> found directory in fcb root with name: nameone
-myfs_getattr(path="/a", statbuf=0xc4b48c10)
+myfs_mkdir: directory c created!
+myfs_getattr(path="/c", statbuf=0x5f2eac10)
 
+getAttr -> found directory in fcb root with name: a
+getAttr -> found directory in fcb root with name: b
+getAttr -> found directory in fcb root with name: c
+myfs_getattr(path="/", statbuf=0x5f2eabe0)
+write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/d", statbuf=0x5f2eac10)
+
+getAttr -> found directory in fcb root with name: a
+getAttr -> found directory in fcb root with name: b
+getAttr -> found directory in fcb root with name: c
+getAttr -> directory not found
+myfs_mkdir : /d
+
+myfs_mkdir: directory created!
+myfs_mkdir: dir entry has been found and occupied
+myfs_mkdir: name of the dir:  d
+
+myfs_mkdir: directory d created!
+myfs_getattr(path="/d", statbuf=0x5faebc10)
+
+getAttr -> found directory in fcb root with name: a
+getAttr -> found directory in fcb root with name: b
+getAttr -> found directory in fcb root with name: c
+getAttr -> found directory in fcb root with name: d
+myfs_getattr(path="/", statbuf=0x5faebbe0)
+write_readdir(path="/", buf=0x50000a20, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/", statbuf=0x5f2eabe0)
+write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/", statbuf=0x5faebbe0)
+write_readdir(path="/", buf=0x50000a20, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/", statbuf=0x5f2eabe0)
+write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/", statbuf=0x5f2eabe0)

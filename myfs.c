@@ -50,12 +50,16 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		stbuf->st_nlink = 2;
 		stbuf->st_uid = root_node.uid;
 		stbuf->st_gid = root_node.gid;
+		stbuf->st_ctime = root_node.ctime;
+		stbuf->st_atime = root_node.atime;
+		stbuf->st_mtime = root_node.mtime;
 
 		return 0;
 	} 
 	else {
 
 		dir_fcb root_fcb;  
+		path++;
 		
 		fetch_data(root_node.data_id, &root_fcb, sizeof(dir_fcb));
 
@@ -64,12 +68,18 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 			if (strcmp(root_fcb.entryNames[i], "") != 0) {
 				write_log("\ngetAttr -> found directory in fcb root with name: %s", root_fcb.entryNames[i]);
 				
-				 stbuf->st_mode = root_node.mode;
-				 stbuf->st_nlink = 2;
-				 stbuf->st_uid = root_node.uid;
-				 stbuf->st_gid = root_node.gid;
 
-				return 0;
+				if (strcmp(root_fcb.entryNames[i], path) == 0) {
+					stbuf->st_mode = root_node.mode;
+					stbuf->st_nlink = 2;
+					stbuf->st_uid = root_node.uid;
+					stbuf->st_gid = root_node.gid;
+					stbuf->st_ctime = root_node.ctime;
+					stbuf->st_atime = root_node.atime;
+					stbuf->st_mtime = root_node.mtime;
+
+					return 0;
+				}
 			}
 		}
 
@@ -87,23 +97,8 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 
 	write_log("write_readdir(path=\"%s\", buf=0x%08x, filler=0x%08x, offset=%lld, fi=0x%08x)\n", path, buf, filler, offset, fi);
 
-	// This implementation supports only a root directory so return an error if the path is not '/'.
-	// if (strcmp(path, "/") != 0){
-	// 	write_log("myfs_readdir - ENOENT");
-	// 	return -ENOENT;
-	// }
-
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-
-	filler(buf, "abc", NULL, 0);
-
-	char *pathP = (char*)&(root_node.path);
-	if(*pathP!='\0'){
-		// drop the leading '/';
-		pathP++;
-		filler(buf, pathP, NULL, 0);
-	}
 
 	// Finding the parent
 	i_node parent = root_node;
@@ -112,9 +107,14 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 
 	fetch_data(root_node.data_id, &parent_dir_fcb, sizeof(dir_fcb));
 
+	write_log("\ngetAttr -> current dir name: %s", parent_dir_fcb.entryNames[0]);
+
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-		if (strncmp(parent_dir_fcb.entryNames[i], "", MAX_NAME_SIZE) != 0)
-		filler(buf, "a", NULL, 0);
+		if (strncmp(parent_dir_fcb.entryNames[i], "", MAX_NAME_SIZE) != 0) {
+			filler(buf, parent_dir_fcb.entryNames[i], NULL, 0);
+		}
+			
+			
 	}
 
 	return 0;
@@ -332,7 +332,6 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	// Find directory that is the parent directory ! IMPLEMENT !
 	i_node parent = root_node;
 
-
 	// Creating an inode for the next directory
 	i_node new_dir;
 
@@ -340,11 +339,15 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	// Getting context of the current environment
 	struct fuse_context *context = fuse_get_context();
+	time_t current_time = time(NULL);
 	
 	// Setting the context parameters for the new directory
 	new_dir.uid = context->uid;
 	new_dir.gid = context->gid;
 	new_dir.mode = mode | S_IFDIR;
+	new_dir.atime = current_time;
+	new_dir.ctime = current_time;
+	new_dir.mtime = current_time;
 
 	// Storing the inode of the new directory in the database
 	store_data(new_dir.id, &new_dir, sizeof(i_node));
@@ -354,12 +357,16 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	fetch_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
 
+	write_log("\nmyfs_mkdir: directory created!");
+
+	// Getting directory name
+
 	// Finding an empty entry space
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
-
-			strcpy(parent_fcb.entryNames[i], "nameone");
+			path++;
+			strcpy(parent_fcb.entryNames[i], path);
 			uuid_copy(parent_fcb.entryIds[i], new_dir.id);
 			write_log("\nmyfs_mkdir: dir entry has been found and occupied");
 
@@ -371,7 +378,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
 
-	write_log("\nmyfs_mkdir: directory created!");
+	write_log("\nmyfs_mkdir: directory %s created!", path++);
 
     return 0;
 }
@@ -480,8 +487,12 @@ void init_fs() {
 		memset(&root_node, 0, sizeof(i_node));
 
 		// See 'man 2 stat' and 'man 2 chmod'.
-		root_node.mode |= S_IFDIR | S_IRUSR | S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
-		root_node.mtime = time(0);
+		time_t current_time = time(NULL);
+
+		root_node.mode |= S_IFDIR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+		root_node.mtime = current_time;
+		root_node.atime = current_time;
+		root_node.ctime = current_time;
 		root_node.uid = getuid();
 		root_node.gid = getgid();
 
