@@ -1,54 +1,58 @@
 
-myfs_getattr(path="/.Trash", statbuf=0xb8145c10)
+myfs_getattr(path="/.Trash", statbuf=0xd14e8c10)
 in find parent
 parent log 
-dir_fcb fetched!
+token: .Trashdir_fcb fetched!
  .Trash
-
+findParent: returning parent (might be root)
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0xb7944c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xd0ce7c10)
 in find parent
 parent log 
-dir_fcb fetched!
+token: .Trash-18197dir_fcb fetched!
  .Trash-18197
-
+findParent: returning parent (might be root)
 getAttr -> directory not found
-myfs_getattr(path="/.Trash", statbuf=0xb8145c10)
+myfs_getattr(path="/.Trash", statbuf=0xd14e8c10)
 in find parent
 parent log 
-dir_fcb fetched!
+token: .Trashdir_fcb fetched!
  .Trash
-
+findParent: returning parent (might be root)
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0xb7944c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xd0ce7c10)
 in find parent
 parent log 
-dir_fcb fetched!
+token: .Trash-18197dir_fcb fetched!
  .Trash-18197
-
+findParent: returning parent (might be root)
 getAttr -> directory not found
-myfs_getattr(path="/", statbuf=0xb8145be0)
-write_readdir(path="/", buf=0xa8000990, filler=0xb8c3ac00, offset=0, fi=0xb8145c00)
+myfs_getattr(path="/", statbuf=0xd14e8be0)
+write_readdir(path="/", buf=0xc4000990, filler=0xd1fddc00, offset=0, fi=0xd14e8c00)
 
 getAttr -> current dir name: 
-myfs_getattr(path="/a", statbuf=0xb7944c10)
+myfs_getattr(path="/a", statbuf=0xd0ce7c10)
 in find parent
 parent log 
-dir_fcb fetched!
+token: adir_fcb fetched!
  a
-
+findParent: returning parent (might be root)
 getAttr -> directory not found
 myfs_mkdir : /a
-
+ID of the dir: 5e3a42fb-87e7-4036-8701-2dde12f70fe2
 myfs_mkdir: directory created!
 myfs_mkdir: dir entry has been found and occupied
 myfs_mkdir: name of the dir:  a
 
 myfs_mkdir: directory a created!
-myfs_getattr(path="/a", statbuf=0xb8145c10)
+myfs_getattr(path="/a", statbuf=0xd14e8c10)
 in find parent
 parent log 
-dir_fcb fetched!
-ID: aed0a7e1-d2b8-4fff-b8c6-2ebb7c82741e
+token: adir_fcb fetched!
+ID: 5e3a42fb-87e7-4036-8701-2dde12f70fe2
  a
-myfs_database error - cannot fetch data
+findParent: returning parent (might be root)
+getAttr -> found directory in fcb root with name: a
+myfs_getattr(path="/", statbuf=0xd14e8be0)
+write_readdir(path="/", buf=0xc4000990, filler=0xd1fddc00, offset=0, fi=0xd0ce7c00)
+

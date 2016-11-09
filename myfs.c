@@ -51,7 +51,6 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 	}
 }
 
-
 int findParent(const char* path, i_node* buff) {
 	char *token;
 
@@ -66,11 +65,19 @@ int findParent(const char* path, i_node* buff) {
 	write_log("parent log \n");
 
 	i_node current_inode = root_node;
+	i_node child_inode = root_node;
 
 	int is_found = 0;
 	int tokenCount = 0; 
 
 	while (token != NULL) {
+		current_inode = child_inode;
+
+		write_log("token: %s", token);
+
+		if (strcmp(token, "") == 0) {
+			break;
+		}
 
 		dir_fcb current_fcb;
 
@@ -79,13 +86,16 @@ int findParent(const char* path, i_node* buff) {
 		write_log("dir_fcb fetched!\n");
 
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+
 			if (strcmp(current_fcb.entryNames[i], token) == 0) {
 				i_node next_inode;
 				write_log("ID: %s\n", get_UUID(current_fcb.entryIds[i]));
 
 				fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
 
-				current_inode = next_inode;	
+				child_inode = next_inode;	
+
+
 				is_found = 1;	
 
 				break;
@@ -100,6 +110,7 @@ int findParent(const char* path, i_node* buff) {
 
 	// When token is 1, current inode is root
 	if (is_found == 1 || tokenCount == 1) {
+		write_log("findParent: returning parent (might be root)" );
 		memcpy(buff, &current_inode, sizeof(i_node));
 		return 0;
 	}
@@ -413,6 +424,17 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	uuid_generate(new_dir.id);
 
+	// Creating a dir file control block for the new directory
+	dir_fcb new_dir_entries;
+
+	memset(&new_dir_entries, 0, sizeof(dir_fcb));
+
+	uuid_generate(new_dir_entries.id);
+
+	uuid_copy(new_dir.data_id, new_dir_entries.id);
+
+	store_data(new_dir.data_id, &new_dir_entries, sizeof(dir_fcb));
+
 	// Getting context of the current environment
 	struct fuse_context *context = fuse_get_context();
 	time_t current_time = time(NULL);
@@ -424,6 +446,8 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	new_dir.atime = current_time;
 	new_dir.ctime = current_time;
 	new_dir.mtime = current_time;
+
+	write_log("ID of the dir: %s", get_UUID(new_dir.id));
 
 	// Storing the inode of the new directory in the database
 	store_data(new_dir.id, &new_dir, sizeof(i_node));
