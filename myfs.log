@@ -1,21 +1,41 @@
 
-myfs_getattr(path="/.Trash", statbuf=0x5faebc10)
+myfs_getattr(path="/.Trash", statbuf=0xb8145c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ .Trash
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0x5faebc10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xb7944c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ .Trash-18197
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash", statbuf=0x5f2eac10)
+myfs_getattr(path="/.Trash", statbuf=0xb8145c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ .Trash
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0x5faebc10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xb7944c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ .Trash-18197
 
 getAttr -> directory not found
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
-write_readdir(path="/", buf=0x58000b00, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
+myfs_getattr(path="/", statbuf=0xb8145be0)
+write_readdir(path="/", buf=0xa8000990, filler=0xb8c3ac00, offset=0, fi=0xb8145c00)
 
 getAttr -> current dir name: 
-myfs_getattr(path="/a", statbuf=0x5faebc10)
+myfs_getattr(path="/a", statbuf=0xb7944c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ a
 
 getAttr -> directory not found
 myfs_mkdir : /a
@@ -25,86 +45,10 @@ myfs_mkdir: dir entry has been found and occupied
 myfs_mkdir: name of the dir:  a
 
 myfs_mkdir: directory a created!
-myfs_getattr(path="/a", statbuf=0x5f2eac10)
-
-getAttr -> found directory in fcb root with name: a
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
-write_readdir(path="/", buf=0x58000b00, filler=0x605e0c00, offset=0, fi=0x5faebc00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/b", statbuf=0x5f2eac10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> directory not found
-myfs_mkdir : /b
-
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  b
-
-myfs_mkdir: directory b created!
-myfs_getattr(path="/b", statbuf=0x5faebc10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: b
-myfs_getattr(path="/", statbuf=0x5faebbe0)
-write_readdir(path="/", buf=0x50000990, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/c", statbuf=0x5faebc10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: b
-getAttr -> directory not found
-myfs_mkdir : /c
-
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  c
-
-myfs_mkdir: directory c created!
-myfs_getattr(path="/c", statbuf=0x5f2eac10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: b
-getAttr -> found directory in fcb root with name: c
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
-write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/d", statbuf=0x5f2eac10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: b
-getAttr -> found directory in fcb root with name: c
-getAttr -> directory not found
-myfs_mkdir : /d
-
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  d
-
-myfs_mkdir: directory d created!
-myfs_getattr(path="/d", statbuf=0x5faebc10)
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: b
-getAttr -> found directory in fcb root with name: c
-getAttr -> found directory in fcb root with name: d
-myfs_getattr(path="/", statbuf=0x5faebbe0)
-write_readdir(path="/", buf=0x50000a20, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
-write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x5faebbe0)
-write_readdir(path="/", buf=0x50000a20, filler=0x605e0c00, offset=0, fi=0x5f2eac00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
-write_readdir(path="/", buf=0x58000b90, filler=0x605e0c00, offset=0, fi=0x5faebc00)
-
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x5f2eabe0)
+myfs_getattr(path="/a", statbuf=0xb8145c10)
+in find parent
+parent log 
+dir_fcb fetched!
+ID: aed0a7e1-d2b8-4fff-b8c6-2ebb7c82741e
+ a
+myfs_database error - cannot fetch data

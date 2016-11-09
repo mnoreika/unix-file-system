@@ -12,6 +12,14 @@
 // Storing root directory in memory
 i_node root_node;
 
+char UUID_BUFF[100];
+
+char* get_UUID(uuid_t id)  {
+	uuid_unparse(id, UUID_BUFF);
+	return UUID_BUFF;
+}
+
+
 // Fetching data from the database
 void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 
@@ -20,9 +28,14 @@ void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 	int rc = unqlite_kv_fetch (pDb, data_id, KEY_SIZE, NULL, &nBytes);
 
 	// Handling errors in case of unable to fetch
-	if (rc != UNQLITE_OK || nBytes != size) {
+	if (rc != UNQLITE_OK ) {
 			write_log("myfs_database error - cannot fetch data");
 			error_handler(rc);
+	}
+
+	if (nBytes != size) {
+		write_log("myfs_database error - fetched data size different than expected");
+		exit(-1);
 	}
 
 	// Actually fetching the data 
@@ -39,12 +52,69 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 }
 
 
+int findParent(const char* path, i_node* buff) {
+	char *token;
+
+	write_log("in find parent\n");
+
+	char cp_path[MAX_NAME_SIZE];
+
+	strcpy(cp_path, path);
+
+	token = strtok(cp_path, "/");
+
+	write_log("parent log \n");
+
+	i_node current_inode = root_node;
+
+	int is_found = 0;
+	int tokenCount = 0; 
+
+	while (token != NULL) {
+
+		dir_fcb current_fcb;
+
+		fetch_data(current_inode.data_id, &current_fcb, sizeof(dir_fcb));
+
+		write_log("dir_fcb fetched!\n");
+
+		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+			if (strcmp(current_fcb.entryNames[i], token) == 0) {
+				i_node next_inode;
+				write_log("ID: %s\n", get_UUID(current_fcb.entryIds[i]));
+
+				fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
+
+				current_inode = next_inode;	
+				is_found = 1;	
+
+				break;
+			}
+		}
+
+		write_log( " %s\n", token );
+		
+		token = strtok(NULL, "/s");
+		tokenCount++;
+	}
+
+	// When token is 1, current inode is root
+	if (is_found == 1 || tokenCount == 1) {
+		memcpy(buff, &current_inode, sizeof(i_node));
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
+
 // Get file and directory attributes (meta-data)
 static int myfs_getattr(const char *path, struct stat *stbuf) {
 	write_log("\nmyfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
 
 	memset(stbuf, 0, sizeof(struct stat));
-	
+
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = root_node.mode;
 		stbuf->st_nlink = 2;
@@ -57,19 +127,25 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		return 0;
 	} 
 	else {
-
-		dir_fcb root_fcb;  
+		i_node parent;
 		path++;
+
+		int found = findParent(path, &parent);
+
+		if (found == -1)
+			return -ENOENT;
+
+		dir_fcb parent_dir_fcb;  
 		
-		fetch_data(root_node.data_id, &root_fcb, sizeof(dir_fcb));
+		fetch_data(parent.data_id, &parent_dir_fcb, sizeof(dir_fcb));
 
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
-			if (strcmp(root_fcb.entryNames[i], "") != 0) {
-				write_log("\ngetAttr -> found directory in fcb root with name: %s", root_fcb.entryNames[i]);
+			if (strcmp(parent_dir_fcb.entryNames[i], "") != 0) {
+				write_log("\ngetAttr -> found directory in fcb root with name: %s", parent_dir_fcb.entryNames[i]);
 				
 
-				if (strcmp(root_fcb.entryNames[i], path) == 0) {
+				if (strcmp(parent_dir_fcb.entryNames[i], path) == 0) {
 					stbuf->st_mode = root_node.mode;
 					stbuf->st_nlink = 2;
 					stbuf->st_uid = root_node.uid;
