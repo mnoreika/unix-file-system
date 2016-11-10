@@ -9,7 +9,7 @@ TARGET3 = myfs
 TARGET4 = test
 TARGET5 = uuid
 
-all: $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(TARGET5)
+all: $(TARGET3) $(TARGET4) $(TARGET5)
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

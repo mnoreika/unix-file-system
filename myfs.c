@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 #include "myfs.h"
 
@@ -29,7 +30,7 @@ void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 
 	// Handling errors in case of unable to fetch
 	if (rc != UNQLITE_OK ) {
-			write_log("myfs_database error - cannot fetch data");
+			write_log("\nmyfs_database error - cannot fetch data\n");
 			error_handler(rc);
 	}
 
@@ -51,7 +52,7 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 	}
 }
 
-int findParent(const char* path, i_node* buff) {
+int findParent(const char* path, i_node* buff, int state) {
 	char *token;
 
 	write_log("in find parent\n");
@@ -62,7 +63,7 @@ int findParent(const char* path, i_node* buff) {
 
 	token = strtok(cp_path, "/");
 
-	write_log("parent log \n");
+	write_log("parent log:(%s)\n", token);
 
 	i_node current_inode = root_node;
 	i_node child_inode = root_node;
@@ -70,14 +71,17 @@ int findParent(const char* path, i_node* buff) {
 	int is_found = 0;
 	int tokenCount = 0; 
 
+	if (token == NULL) {
+		memcpy(buff, &root_node, sizeof(i_node));
+		return 0;
+	}
+
 	while (token != NULL) {
 		current_inode = child_inode;
 
-		write_log("token: %s", token);
+		
 
-		if (strcmp(token, "") == 0) {
-			break;
-		}
+		write_log("token: %s\n", token);
 
 		dir_fcb current_fcb;
 
@@ -88,31 +92,48 @@ int findParent(const char* path, i_node* buff) {
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 			if (strcmp(current_fcb.entryNames[i], token) == 0) {
-				i_node next_inode;
-				write_log("ID: %s\n", get_UUID(current_fcb.entryIds[i]));
-
-				fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
-
-				child_inode = next_inode;	
 
 
-				is_found = 1;	
+					i_node next_inode;
+					write_log("ID: %s\n", get_UUID(current_fcb.entryIds[i]));
 
-				break;
+					fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
+
+					child_inode = next_inode;	
+
+					is_found = 1;	
+
+					break;
+				
 			}
 		}
+
+		tokenCount++;
+
+		if (is_found == 0)
+			break;
 
 		write_log( " %s\n", token );
 		
 		token = strtok(NULL, "/s");
-		tokenCount++;
 	}
 
 	// When token is 1, current inode is root
 	if (is_found == 1 || tokenCount == 1) {
-		write_log("findParent: returning parent (might be root)" );
-		memcpy(buff, &current_inode, sizeof(i_node));
-		return 0;
+		if (tokenCount == 1)
+			write_log("findParent: returning parent - root\n" );
+		else
+			write_log("findParent: returning parent\n" );
+
+		if (state) {
+			memcpy(buff, &child_inode, sizeof(i_node));
+			return 0;
+		}
+		else {
+			memcpy(buff, &current_inode, sizeof(i_node));
+			return 0;
+		}
+		
 	}
 	else {
 		return -1;
@@ -141,12 +162,17 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		i_node parent;
 		path++;
 
-		int found = findParent(path, &parent);
+		int found = findParent(path, &parent, 0);
 
 		if (found == -1)
 			return -ENOENT;
 
 		dir_fcb parent_dir_fcb;  
+
+		char *dirname;
+		char *path_cp = strdup(path);
+
+		dirname = basename(path_cp);
 		
 		fetch_data(parent.data_id, &parent_dir_fcb, sizeof(dir_fcb));
 
@@ -156,7 +182,7 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 				write_log("\ngetAttr -> found directory in fcb root with name: %s", parent_dir_fcb.entryNames[i]);
 				
 
-				if (strcmp(parent_dir_fcb.entryNames[i], path) == 0) {
+				if (strcmp(parent_dir_fcb.entryNames[i], dirname) == 0) {
 					stbuf->st_mode = root_node.mode;
 					stbuf->st_nlink = 2;
 					stbuf->st_uid = root_node.uid;
@@ -188,11 +214,15 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 	filler(buf, "..", NULL, 0);
 
 	// Finding the parent
-	i_node parent = root_node;
+	i_node parent;
+	path++;
+
+	findParent(path, &parent, 1);
+
 
 	dir_fcb parent_dir_fcb;
 
-	fetch_data(root_node.data_id, &parent_dir_fcb, sizeof(dir_fcb));
+	fetch_data(parent.data_id, &parent_dir_fcb, sizeof(dir_fcb));
 
 	write_log("\ngetAttr -> current dir name: %s", parent_dir_fcb.entryNames[0]);
 
@@ -287,18 +317,18 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 static int myfs_utime(const char *path, struct utimbuf *ubuf){
     write_log("myfs_utime(path=\"%s\", ubuf=0x%08x)\n", path, ubuf);
 
-	if(strcmp(path, root_node.path) != 0){
-		write_log("myfs_utime - ENOENT");
-		return -ENOENT;
-	}
-	root_node.mtime=ubuf->modtime;
+	// if(strcmp(path, root_node.path) != 0){
+	// 	write_log("myfs_utime - ENOENT");
+	// 	return -ENOENT;
+	// }
+	// root_node.mtime=ubuf->modtime;
 
-	// Write the fcb to the store.
-    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
-	if( rc != UNQLITE_OK ){
-		write_log("myfs_write - EIO");
-		return -EIO;
-	}
+	// // Write the fcb to the store.
+ //    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
+	// if( rc != UNQLITE_OK ){
+	// 	write_log("myfs_write - EIO");
+	// 	return -EIO;
+	// }
 
     return 0;
 }
@@ -417,8 +447,24 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	}
 
 	// Find directory that is the parent directory ! IMPLEMENT !
-	i_node parent = root_node;
+	i_node parent;
 
+	path++;
+
+
+	if (findParent(path, &parent, 0) != 0) {
+		write_log("PARENT NOT FOUND MATE!\n");
+	}
+
+	char *dirname;
+	char *path_cp = strdup(path);
+
+	dirname = basename(path_cp);
+	
+
+	write_log("Base name: %s\n", dirname);
+
+	
 	// Creating an inode for the next directory
 	i_node new_dir;
 
@@ -465,12 +511,11 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
-			path++;
-			strcpy(parent_fcb.entryNames[i], path);
+			strcpy(parent_fcb.entryNames[i], dirname);
 			uuid_copy(parent_fcb.entryIds[i], new_dir.id);
 			write_log("\nmyfs_mkdir: dir entry has been found and occupied");
 
-			write_log("\nmyfs_mkdir: name of the dir:  %s\n", &parent_fcb.entryNames[i]);
+			write_log("\nmyfs_mkdir: name of the dir:  %s : %s\n", &parent_fcb.entryNames[i], dirname);
 			break;
 		}
 
@@ -478,7 +523,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
 
-	write_log("\nmyfs_mkdir: directory %s created!", path++);
+	write_log("\nmyfs_mkdir: directory %s created!", dirname);
 
     return 0;
 }

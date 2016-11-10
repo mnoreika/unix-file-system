@@ -11,8 +11,6 @@ typedef struct inode_struct {
 	uuid_t id; /* unique id of the current file */
 	uuid_t data_id; /* unique file data id */
 
-	char path[MAX_PATH_SIZE];
-
 	uid_t  uid;		/* user */
     gid_t  gid;		/* group */
 	mode_t mode;	/* protection */
