@@ -114,8 +114,6 @@ int findTargetInode(const char* path, i_node* buff) {
 static int myfs_getattr(const char *path, struct stat *stbuf) {
 	write_log("\nmyfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
 
-	
-
 	memset(stbuf, 0, sizeof(struct stat));
 
 	if (strcmp(path, "/") == 0) {
@@ -218,42 +216,33 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 
 // Read a file.
 static int myfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-	size_t len;
 	(void) fi;
+
+	path++;
 
 	write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	// len = root_node.size;
+	i_node target;
 
-	// uint8_t data_block[MY_MAX_FILE_SIZE];
+	findTargetInode(path, &target);
 
-	// memset(&data_block, 0, MY_MAX_FILE_SIZE);
-	// uuid_t *data_id = &(root_node.data_id);
+	fcb target_fcb;
 
-	// // Is there a data block?
-	// if(uuid_compare(zero_uuid,*data_id)!=0) {
-	// 	unqlite_int64 nBytes;  //Data length.
-	// 	int rc = unqlite_kv_fetch(pDb,data_id,KEY_SIZE,NULL,&nBytes);
-	// 	if( rc != UNQLITE_OK ){
-	// 	  error_handler(rc);
-	// 	}
-	// 	if(nBytes!=MY_MAX_FILE_SIZE){
-	// 		write_log("myfs_read - EIO");
-	// 		return -EIO;
-	// 	}
+	write_log("Reading the file... \n");
 
-	// 	// Fetch the fcb the root data block from the store.
-	// 	unqlite_kv_fetch(pDb,data_id,KEY_SIZE,&data_block,&nBytes);
-	// }
+	fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
 
-	// if (offset < len) {
-	// 	if (offset + size > len)
-	// 		size = len - offset;
-	// 	memcpy(buf, &data_block + offset, size);
-	// } else
-	// 	size = 0;
+	size_t len = target.size;
 
-	return -ENOENT;
+	if (offset < len) {
+		if (offset + size > len)
+			size = len - offset;
+
+		memcpy(buf, &target_fcb.data + offset, size);
+	} else
+		size = 0;
+
+	return size;
 }
 
 // This file system only supports one file. Create should fail if a file has been created. Path must be '/<something>'.
@@ -390,46 +379,11 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	store_data(target.id, &target, sizeof(i_node));
 	store_data(target_fcb.id, &target_fcb, sizeof(fcb));
 
-
-	// for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-	// 	if (strcmp("", parent_fcb.entryNames[i]) != 0) {
-	// 		if (strcmp(file_name, parent_fcb.entryNames[i]) == 0) {
-	// 			i_node file_inode;
-
-	// 			write_log("File to write to: %s\n", parent_fcb.entryNames[i]);
-
-	// 			fetch_data(parent_fcb.entryIds[i], &file_inode, sizeof(file_inode));
-
-	// 			fcb file_fcb;
-
-	// 			fetch_data(file_inode.data_id, &file_fcb, sizeof(file_fcb));
-
-	// 			int written = snprintf(file_fcb.data, MAX_FILE_SIZE, buf);
-
-	// 			file_inode.size = written;
-	// 			time_t now = time(NULL);
-	// 			file_inode.mtime = now;
-	// 			file_inode.ctime = now;
-
-	// 			store_data(file_inode.id, &file_inode, sizeof(i_node));
-	// 			store_data(file_fcb.id, &file_fcb, sizeof(file_fcb));
-
-	// 			break;		
-	// 		}
-	// 	}
-	// }
-	
-
-	// Write the data in-memory.
-
-	// Write the data block to the store.
-	
-	// Update the fcb in-memory.
 	
 
 	write_log("File written succesfully.\n");
 
-    return -ENOENT; //return written
+    return written; //return written
 }
 
 // Set the size of a file.
@@ -528,6 +482,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	new_dir.atime = current_time;
 	new_dir.ctime = current_time;
 	new_dir.mtime = current_time;
+	new_dir.size = 0;
 
 	write_log("ID of the dir: %s", get_UUID(new_dir.id));
 
@@ -568,14 +523,73 @@ int myfs_mkdir(const char *path, mode_t mode) {
 // Read 'man 2 unlink'.
 int myfs_unlink(const char *path){
 	write_log("myfs_unlink: %s\n",path);
+	path++;
 
-    return 0;
+	i_node parent;
+
+	char *parentPath;
+	char *target_name;
+
+	char path_cp[strlen(path) + 1];
+
+	strcpy(path_cp, path);
+	
+	parentPath = dirname(path_cp);
+	target_name = basename(path_cp);
+
+	write_log("Target name: %s", target_name);
+
+	findTargetInode(parentPath, &parent);
+
+	dir_fcb parent_fcb;
+
+	fetch_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
+
+	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+		write_log("Looping... \n");
+
+		if (strcmp(parent_fcb.entryNames[i], target_name) == 0) {
+			write_log("Found data and trying to delete: \n");
+			memset(&parent_fcb.entryNames[i], 0, sizeof(char) * MAX_NAME_SIZE);
+
+			store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
+			return 0;
+		}
+	}
+
+    return -ENOENT;
 }
 
 // Delete a directory.
 // Read 'man 2 rmdir'. IMPLEMENT
-int myfs_rmdir(const char *path){
+int myfs_rmdir(const char *path) {
     write_log("myfs_rmdir: %s\n",path);
+
+    path++;
+
+    i_node target;
+
+    findTargetInode(path, &target);
+
+    dir_fcb target_dir_fcb;
+
+    write_log("\nTrying to fetch \n");
+
+    fetch_data(target.data_id, &target_dir_fcb, sizeof(dir_fcb));	
+
+    write_log("\nFetch succesfull\n");
+
+    for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+    	write_log("\nFHey\n");
+    	if (strcmp("", target_dir_fcb.entryNames[i]) != 0) {
+    		return -ENOTEMPTY;
+    		
+    	}
+    }
+
+    path--;
+
+    myfs_unlink(path);
 
     return 0;
 }
@@ -626,6 +640,8 @@ static struct fuse_operations myfs_oper = {
 	.flush		= myfs_flush,
 	.release	= myfs_release,
 	.mkdir 		= myfs_mkdir,
+	.rmdir      = myfs_rmdir,
+	.unlink     = myfs_unlink,
 
 };
 
