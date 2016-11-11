@@ -1,11 +1,8 @@
 #define FUSE_USE_VERSION 26
 #define ARROW "->"
 
-#include <fuse.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <libgen.h>
 
 #include "myfs.h"
@@ -19,7 +16,6 @@ char* get_UUID(uuid_t id)  {
 	uuid_unparse(id, UUID_BUFF);
 	return UUID_BUFF;
 }
-
 
 // Fetching data from the database
 void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
@@ -43,8 +39,10 @@ void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 	rc = unqlite_kv_fetch (pDb, data_id, KEY_SIZE, dataStorage, &nBytes);
 }
 
+// Storing data into the database
 void store_data(uuid_t data_id, void* data, size_t size) {
 	int rc = unqlite_kv_store(pDb, data_id, KEY_SIZE, data, size);
+
 
 	if( rc != UNQLITE_OK ) {
 		write_log("\nmyfs_create - storing of the data failed");
@@ -52,18 +50,13 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 	}
 }
 
-int findParent(const char* path, i_node* buff, int state) {
-	char *token;
-
-	write_log("in find parent\n");
-
+// Finding an inode of a target
+int findTargetInode(const char* path, i_node* buff) {
 	char cp_path[MAX_NAME_SIZE];
 
 	strcpy(cp_path, path);
 
-	token = strtok(cp_path, "/");
-
-	write_log("parent log:(%s)\n", token);
+	char* token = strtok(cp_path, "/");
 
 	i_node current_inode = root_node;
 	i_node child_inode = root_node;
@@ -71,6 +64,7 @@ int findParent(const char* path, i_node* buff, int state) {
 	int is_found = 0;
 	int tokenCount = 0; 
 
+	// Returning root if path has no tokens
 	if (token == NULL) {
 		memcpy(buff, &root_node, sizeof(i_node));
 		return 0;
@@ -78,33 +72,22 @@ int findParent(const char* path, i_node* buff, int state) {
 
 	while (token != NULL) {
 		current_inode = child_inode;
-
-		
-
-		write_log("token: %s\n", token);
-
 		dir_fcb current_fcb;
 
 		fetch_data(current_inode.data_id, &current_fcb, sizeof(dir_fcb));
 
-		write_log("dir_fcb fetched!\n");
-
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 			if (strcmp(current_fcb.entryNames[i], token) == 0) {
+				i_node next_inode;
 
+				fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
 
-					i_node next_inode;
-					write_log("ID: %s\n", get_UUID(current_fcb.entryIds[i]));
+				child_inode = next_inode;	
 
-					fetch_data(current_fcb.entryIds[i], &next_inode, sizeof(i_node));
+				is_found = 1;	
 
-					child_inode = next_inode;	
-
-					is_found = 1;	
-
-					break;
-				
+				break;
 			}
 		}
 
@@ -112,28 +95,14 @@ int findParent(const char* path, i_node* buff, int state) {
 
 		if (is_found == 0)
 			break;
-
-		write_log( " %s\n", token );
 		
 		token = strtok(NULL, "/s");
 	}
 
 	// When token is 1, current inode is root
 	if (is_found == 1 || tokenCount == 1) {
-		if (tokenCount == 1)
-			write_log("findParent: returning parent - root\n" );
-		else
-			write_log("findParent: returning parent\n" );
-
-		if (state) {
 			memcpy(buff, &child_inode, sizeof(i_node));
 			return 0;
-		}
-		else {
-			memcpy(buff, &current_inode, sizeof(i_node));
-			return 0;
-		}
-		
 	}
 	else {
 		return -1;
@@ -144,6 +113,8 @@ int findParent(const char* path, i_node* buff, int state) {
 // Get file and directory attributes (meta-data)
 static int myfs_getattr(const char *path, struct stat *stbuf) {
 	write_log("\nmyfs_getattr(path=\"%s\", statbuf=0x%08x)\n", path, stbuf);
+
+	
 
 	memset(stbuf, 0, sizeof(struct stat));
 
@@ -162,48 +133,57 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		i_node parent;
 		path++;
 
-		int found = findParent(path, &parent, 0);
+		char *target_name;
+		char path_cp[strlen(path) + 1];
+
+		strcpy(path_cp, path);
+
+		target_name = basename(path_cp);
+
+		char *parentPath;
+		parentPath = dirname(path_cp);
+
+		int found = findTargetInode(parentPath, &parent);
 
 		if (found == -1)
 			return -ENOENT;
 
 		dir_fcb parent_dir_fcb;  
-
-		char *dirname;
-		char *path_cp = strdup(path);
-
-		dirname = basename(path_cp);
 		
 		fetch_data(parent.data_id, &parent_dir_fcb, sizeof(dir_fcb));
 
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 			if (strcmp(parent_dir_fcb.entryNames[i], "") != 0) {
-				write_log("\ngetAttr -> found directory in fcb root with name: %s", parent_dir_fcb.entryNames[i]);
+				write_log("\ngetAttr -> found directory in fcb parent with name: %s", parent_dir_fcb.entryNames[i]);
 				
 
-				if (strcmp(parent_dir_fcb.entryNames[i], dirname) == 0) {
-					stbuf->st_mode = root_node.mode;
+				if (strcmp(parent_dir_fcb.entryNames[i], target_name) == 0) {
+					i_node current;
+
+					fetch_data(parent_dir_fcb.entryIds[i], &current, sizeof(i_node));
+
+					stbuf->st_mode = current.mode;
 					stbuf->st_nlink = 2;
-					stbuf->st_uid = root_node.uid;
-					stbuf->st_gid = root_node.gid;
-					stbuf->st_ctime = root_node.ctime;
-					stbuf->st_atime = root_node.atime;
-					stbuf->st_mtime = root_node.mtime;
+					stbuf->st_uid = current.uid;
+					stbuf->st_gid = current.gid;
+					stbuf->st_ctime = current.ctime;
+					stbuf->st_atime = current.atime;
+					stbuf->st_mtime = current.mtime;
+					stbuf->st_size = current.size;
 
 					return 0;
 				}
 			}
 		}
 
-		write_log("\ngetAttr -> directory not found", path, stbuf);
+		write_log("\ngetAttr -> directory not found\n", path, stbuf);
 
 		return -ENOENT;
 	}
 }
 
 // Read a directory.
-// Read 'man 2 readdir'. IMPLEMENT
 static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
 	(void) offset;
 	(void) fi;
@@ -215,9 +195,8 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 
 	// Finding the parent
 	i_node parent;
-	path++;
 
-	findParent(path, &parent, 1);
+	findTargetInode(path, &parent);
 
 
 	dir_fcb parent_dir_fcb;
@@ -238,17 +217,11 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 }
 
 // Read a file.
-// Read 'man 2 read'.
 static int myfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-	// size_t len;
-	// (void) fi;
+	size_t len;
+	(void) fi;
 
-	// write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
-
-	// if(strcmp(path, root_node.path) != 0){
-	// 	write_log("myfs_read - ENOENT");
-	// 	return -ENOENT;
-	// }
+	write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
 	// len = root_node.size;
 
@@ -256,8 +229,9 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	// memset(&data_block, 0, MY_MAX_FILE_SIZE);
 	// uuid_t *data_id = &(root_node.data_id);
+
 	// // Is there a data block?
-	// if(uuid_compare(zero_uuid,*data_id)!=0){
+	// if(uuid_compare(zero_uuid,*data_id)!=0) {
 	// 	unqlite_int64 nBytes;  //Data length.
 	// 	int rc = unqlite_kv_fetch(pDb,data_id,KEY_SIZE,NULL,&nBytes);
 	// 	if( rc != UNQLITE_OK ){
@@ -285,30 +259,80 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 // This file system only supports one file. Create should fail if a file has been created. Path must be '/<something>'.
 // Read 'man 2 creat'.
 static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi){
- //    write_log("myfs_create(path=\"%s\", mode=0%03o, fi=0x%08x)\n", path, mode, fi);
+    write_log("myfs_create(path=\"%s\", mode=0%03o, fi=0x%08x)\n", path, mode, fi);
 
- //    if(root_node.path[0] != '\0'){
-	// 	write_log("myfs_create - ENOSPC");
-	// 	return -ENOSPC;
-	// }
+	int pathlen = strlen(path);
 
-	// int pathlen = strlen(path);
-	// if(pathlen>=MY_MAX_PATH){
-	// 	write_log("myfs_create - ENAMETOOLONG");
-	// 	return -ENAMETOOLONG;
-	// }
-	// sprintf(root_node.path,path);
-	// struct fuse_context *context = fuse_get_context();
-	// root_node.uid=context->uid;
-	// root_node.gid=context->gid;
-	// root_node.mode=mode|S_IFREG;
+	if (pathlen >= MAX_PATH_SIZE) {
+		write_log("myfs_create - ENAMETOOLONG");
+		return -ENAMETOOLONG;
+	}
 
-	// int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
-	// if( rc != UNQLITE_OK ){
-	// 	write_log("myfs_create - EIO");
-	// 	return -EIO;
-	// }
+	path++;
 
+	write_log("myfs_create: path - %s\n", path);
+
+	// Getting the inode of the parent
+	i_node parent;
+
+	findTargetInode(path, &parent);
+
+	// Fetching the dir fcb of the parent
+	dir_fcb parent_fcb;
+
+	fetch_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
+
+	// Getting the name of the file
+	char *file_name;
+	char path_cp[strlen(path) + 1];
+
+	strcpy(path_cp, path);
+
+	file_name = basename(path_cp);
+
+
+	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
+			//Creating a new file and storing it in the parent's fcb
+			i_node new_file;
+
+			uuid_generate(new_file.id);
+
+			strcpy(parent_fcb.entryNames[i], file_name);
+			uuid_copy(parent_fcb.entryIds[i], new_file.id);
+
+			fcb new_file_fcb;
+
+			memset(&new_file_fcb, 0, sizeof(new_file_fcb));
+
+			uuid_generate(new_file_fcb.id);
+
+			uuid_copy(new_file.data_id, new_file_fcb.id);
+
+			store_data(new_file_fcb.id, &new_file_fcb, sizeof(new_file_fcb));
+
+			write_log("\nmyfs_create: file entry has been found and occupied\n");
+
+			write_log("\nmyfs_create: name of the file:  (%s) \n", &parent_fcb.entryNames[i]);
+
+			struct fuse_context *context = fuse_get_context();
+
+			new_file.uid = context->uid;
+			new_file.gid = context->gid;
+			new_file.mode = mode | S_IFREG;
+
+			// Storing the file's inode in the database
+			store_data(new_file.id, &new_file, sizeof(i_node));
+
+			store_data(parent_fcb.id, &parent_fcb, sizeof(dir_fcb));
+
+			break;
+		}
+	}
+
+	write_log("\nmyfs_create: file created succesfully\n");
+
+	
     return 0;
 }
 
@@ -316,19 +340,16 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 // Read 'man 2 utime'.
 static int myfs_utime(const char *path, struct utimbuf *ubuf){
     write_log("myfs_utime(path=\"%s\", ubuf=0x%08x)\n", path, ubuf);
+    path++;
 
-	// if(strcmp(path, root_node.path) != 0){
-	// 	write_log("myfs_utime - ENOENT");
-	// 	return -ENOENT;
-	// }
-	// root_node.mtime=ubuf->modtime;
+    i_node current;
 
-	// // Write the fcb to the store.
- //    int rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
-	// if( rc != UNQLITE_OK ){
-	// 	write_log("myfs_write - EIO");
-	// 	return -EIO;
-	// }
+    findTargetInode(path, &current);
+
+    current.mtime = ubuf->modtime;
+    current.atime = ubuf->actime;
+
+	store_data(current.id, &current, sizeof(i_node));
 
     return 0;
 }
@@ -336,62 +357,77 @@ static int myfs_utime(const char *path, struct utimbuf *ubuf){
 // Write to a file.
 // Read 'man 2 write'
 static int myfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
- //    write_log("myfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
+    write_log("myfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	// if(strcmp(path, root_node.path) != 0){
-	// 	write_log("myfs_write - ENOENT");
-	// 	return -ENOENT;
- //    }
+	if(size >= MAX_FILE_SIZE){
+		write_log("myfs_write - EFBIG");
+		return -EFBIG;
+	}
 
-	// if(size >= MY_MAX_FILE_SIZE){
-	// 	write_log("myfs_write - EFBIG");
-	// 	return -EFBIG;
-	// }
+	path++;
 
-	// uint8_t data_block[MY_MAX_FILE_SIZE];
 
-	// memset(&data_block, 0, MY_MAX_FILE_SIZE);
-	// uuid_t *data_id = &(root_node.data_id);
-	// // Is there a data block?
-	// if(uuid_compare(zero_uuid,*data_id)==0){
-	// 	// GEnerate a UUID fo rhte data blocl. We'll write the block itself later.
-	// 	uuid_generate(root_node.data_id);
-	// }else{
-	// 	// First we will check the size of the obejct in the store to ensure that we won't overflow the buffer.
-	// 	unqlite_int64 nBytes;  // Data length.
-	// 	int rc = unqlite_kv_fetch(pDb,data_id,KEY_SIZE,NULL,&nBytes);
-	// 	if( rc!=UNQLITE_OK || nBytes!=MY_MAX_FILE_SIZE){
-	// 		write_log("myfs_write - EIO");
-	// 		return -EIO;
+	// Getting the inode of the parent
+	i_node target;
+
+	findTargetInode(path, &target);
+
+	// Fetching the dir fcb of the parent
+	fcb target_fcb;
+
+
+	fetch_data(target.data_id, &target_fcb, sizeof(fcb));
+
+	write_log("Writting to file... \n");
+
+	int written = snprintf(target_fcb.data, MAX_FILE_SIZE, buf);
+
+	target.size = written;
+	time_t now = time(NULL);
+	target.mtime = now;
+	target.ctime = now;
+
+	store_data(target.id, &target, sizeof(i_node));
+	store_data(target_fcb.id, &target_fcb, sizeof(fcb));
+
+
+	// for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
+	// 	if (strcmp("", parent_fcb.entryNames[i]) != 0) {
+	// 		if (strcmp(file_name, parent_fcb.entryNames[i]) == 0) {
+	// 			i_node file_inode;
+
+	// 			write_log("File to write to: %s\n", parent_fcb.entryNames[i]);
+
+	// 			fetch_data(parent_fcb.entryIds[i], &file_inode, sizeof(file_inode));
+
+	// 			fcb file_fcb;
+
+	// 			fetch_data(file_inode.data_id, &file_fcb, sizeof(file_fcb));
+
+	// 			int written = snprintf(file_fcb.data, MAX_FILE_SIZE, buf);
+
+	// 			file_inode.size = written;
+	// 			time_t now = time(NULL);
+	// 			file_inode.mtime = now;
+	// 			file_inode.ctime = now;
+
+	// 			store_data(file_inode.id, &file_inode, sizeof(i_node));
+	// 			store_data(file_fcb.id, &file_fcb, sizeof(file_fcb));
+
+	// 			break;		
+	// 		}
 	// 	}
-
-	// 	// Fetch the data block from the store.
-	// 	unqlite_kv_fetch(pDb,data_id,KEY_SIZE,&data_block,&nBytes);
-	// 	// Error handling?
 	// }
+	
 
-	// // Write the data in-memory.
- //    int written = snprintf(data_block, MY_MAX_FILE_SIZE, buf);
+	// Write the data in-memory.
 
-	// // Write the data block to the store.
-	// int rc = unqlite_kv_store(pDb,data_id,KEY_SIZE,&data_block,MY_MAX_FILE_SIZE);
-	// if( rc != UNQLITE_OK ){
-	// 	write_log("myfs_write - EIO");
-	// 	return -EIO;
-	// }
+	// Write the data block to the store.
+	
+	// Update the fcb in-memory.
+	
 
-	// // Update the fcb in-memory.
-	// root_node.size=written;
-	// time_t now = time(NULL);
-	// root_node.mtime=now;
-	// root_node.ctime=now;
-
-	// // Write the fcb to the store.
- //    rc = unqlite_kv_store(pDb,&(root_object.id),KEY_SIZE,&root_node,sizeof(i_node));
-	// if( rc != UNQLITE_OK ){
-	// 	write_log("myfs_write - EIO");
-	// 	return -EIO;
-	// }
+	write_log("File written succesfully.\n");
 
     return -ENOENT; //return written
 }
@@ -434,7 +470,7 @@ int myfs_chown(const char *path, uid_t uid, gid_t gid){
     return 0;
 }
 
-// Create a directory IMPLEMENT
+// Create a directory
 int myfs_mkdir(const char *path, mode_t mode) {
 	write_log("\nmyfs_mkdir : %s\n",path);
 
@@ -452,8 +488,8 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	path++;
 
 
-	if (findParent(path, &parent, 0) != 0) {
-		write_log("PARENT NOT FOUND MATE!\n");
+	if (findTargetInode(path, &parent) != 0) {
+		write_log("myfs_mkdir: parent not found\n");
 	}
 
 	char *dirname;

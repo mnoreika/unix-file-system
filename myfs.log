@@ -1,235 +1,109 @@
 
-myfs_getattr(path="/.Trash", statbuf=0x09c6ec10)
-in find parent
-parent log:(.Trash)
-token: .Trash
-dir_fcb fetched!
-findParent: returning parent - root
+myfs_getattr(path="/.Trash", statbuf=0x76953c10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0x09c6ec10)
-in find parent
-parent log:(.Trash-18197)
-token: .Trash-18197
-dir_fcb fetched!
-findParent: returning parent - root
+
+myfs_getattr(path="/.Trash-18197", statbuf=0x76152c10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash", statbuf=0x09c6ec10)
-in find parent
-parent log:(.Trash)
-token: .Trash
-dir_fcb fetched!
-findParent: returning parent - root
+
+myfs_getattr(path="/.Trash", statbuf=0x76953c10)
 
 getAttr -> directory not found
-myfs_getattr(path="/.Trash-18197", statbuf=0x09c6ec10)
-in find parent
-parent log:(.Trash-18197)
-token: .Trash-18197
-dir_fcb fetched!
-findParent: returning parent - root
+
+myfs_getattr(path="/.Trash-18197", statbuf=0x76152c10)
 
 getAttr -> directory not found
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
 
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-write_readdir(path="/", buf=0xfc000990, filler=0x0a763c00, offset=0, fi=0x0946dc00)
-in find parent
-parent log:((null))
+myfs_getattr(path="/", statbuf=0x76953be0)
 
-getAttr -> current dir name: 
-myfs_getattr(path="/a", statbuf=0x09c6ec10)
-in find parent
-parent log:(a)
-token: a
-dir_fcb fetched!
-findParent: returning parent - root
+myfs_getattr(path="/a", statbuf=0x76152c10)
 
 getAttr -> directory not found
-myfs_mkdir : /a
-in find parent
-parent log:(a)
-token: a
-dir_fcb fetched!
-findParent: returning parent - root
-Base name: a
-ID of the dir: dd5b1dd6-0c15-411e-bf05-3246f07bbef5
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  a : a
+myfs_create(path="/a", mode=0100664, fi=0x76953cc0)
+myfs_create: path - a
 
-myfs_mkdir: directory a created!
-myfs_getattr(path="/a", statbuf=0x0946dc10)
-in find parent
-parent log:(a)
-token: a
-dir_fcb fetched!
-ID: dd5b1dd6-0c15-411e-bf05-3246f07bbef5
- a
-findParent: returning parent - root
+myfs_create: file entry has been found and occupied
 
-getAttr -> found directory in fcb root with name: a
-myfs_getattr(path="/", statbuf=0x0946dbe0)
-write_readdir(path="/", buf=0x04000b00, filler=0x0a763c00, offset=0, fi=0x09c6ec00)
-in find parent
-parent log:((null))
+myfs_create: name of the file:  (a) 
+
+myfs_create: file created succesfully
+
+myfs_getattr(path="/a", statbuf=0x76953bd0)
+
+getAttr -> found directory in fcb parent with name: amyfs_flush(path="/a", fi=0x76152cc0)
+myfs_utime(path="/a", ubuf=0x76953a80)
+
+myfs_getattr(path="/a", statbuf=0x76953b40)
+
+getAttr -> found directory in fcb parent with name: amyfs_flush(path="/a", fi=0x76152cc0)
+myfs_release(path="/a", fi=0x76953cc0)
+
+myfs_getattr(path="/a", statbuf=0x76152c10)
+
+getAttr -> found directory in fcb parent with name: amyfs_open(path"/a", fi=0x76953cc0)
+
+myfs_getattr(path="/a", statbuf=0x76953b40)
+
+getAttr -> found directory in fcb parent with name: amyfs_flush(path="/a", fi=0x76152cc0)
+myfs_write(path="/a", buf=0x77a81060, size=2, offset=0, fi=0x76953d30)
+hey
+File written succesfully.
+myfs_flush(path="/a", fi=0x76152cc0)
+myfs_release(path="/a", fi=0x76953cc0)
+
+myfs_getattr(path="/a", statbuf=0x76152c10)
+
+getAttr -> found directory in fcb parent with name: amyfs_open(path"/a", fi=0x76953cc0)
+myfs_flush(path="/a", fi=0x76152cc0)
+myfs_write(path="/a", buf=0x77a81060, size=2, offset=2, fi=0x76953d30)
+hey
+File written succesfully.
+myfs_flush(path="/a", fi=0x76152cc0)
+myfs_release(path="/a", fi=0x76953cc0)
+
+myfs_getattr(path="/b", statbuf=0x76152c10)
+
+getAttr -> found directory in fcb parent with name: a
+getAttr -> directory not found
+myfs_create(path="/b", mode=0100664, fi=0x76953cc0)
+myfs_create: path - b
+
+myfs_create: file entry has been found and occupied
+
+myfs_create: name of the file:  (b) 
+
+myfs_create: file created succesfully
+
+myfs_getattr(path="/b", statbuf=0x76953bd0)
+
+getAttr -> found directory in fcb parent with name: a
+getAttr -> found directory in fcb parent with name: bmyfs_flush(path="/b", fi=0x76152cc0)
+myfs_write(path="/b", buf=0x77a81060, size=2, offset=0, fi=0x76953d30)
+hey
+File written succesfully.
+myfs_flush(path="/b", fi=0x76152cc0)
+myfs_release(path="/b", fi=0x76953cc0)
+
+myfs_getattr(path="/", statbuf=0x76953be0)
+write_readdir(path="/", buf=0x68000990, filler=0x77448c00, offset=0, fi=0x76152c00)
 
 getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x0946dbe0)
+myfs_getattr(path="/", statbuf=0x76953be0)
 
-myfs_getattr(path="/hello", statbuf=0x09c6ec10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-findParent: returning parent - root
+myfs_getattr(path="/a", statbuf=0x76152c10)
 
-getAttr -> found directory in fcb root with name: a
-getAttr -> directory not found
-myfs_getattr(path="/hello", statbuf=0x0946dc10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-findParent: returning parent - root
+getAttr -> found directory in fcb parent with name: a
+myfs_getattr(path="/b", statbuf=0x76953c10)
 
-getAttr -> found directory in fcb root with name: a
-getAttr -> directory not found
-myfs_getattr(path="/hello", statbuf=0x09c6ec10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-findParent: returning parent - root
+getAttr -> found directory in fcb parent with name: a
+getAttr -> found directory in fcb parent with name: b
+myfs_getattr(path="/", statbuf=0x76152be0)
 
-getAttr -> found directory in fcb root with name: a
-getAttr -> directory not found
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-write_readdir(path="/", buf=0xfc0009e0, filler=0x0a763c00, offset=0, fi=0x0946dc00)
-in find parent
-parent log:((null))
+myfs_getattr(path="/a", statbuf=0x76953c10)
 
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-
-myfs_getattr(path="/hello", statbuf=0x0946dc10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> directory not found
-myfs_mkdir : /hello
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-findParent: returning parent - root
-Base name: hello
-ID of the dir: e0dc3ab2-be52-4673-989e-1fbc95d6771e
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  hello : hello
-
-myfs_mkdir: directory hello created!
-myfs_getattr(path="/hello", statbuf=0x09c6ec10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-ID: e0dc3ab2-be52-4673-989e-1fbc95d6771e
- hello
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: hello
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-write_readdir(path="/", buf=0xfc000a70, filler=0x0a763c00, offset=0, fi=0x0946dc00)
-in find parent
-parent log:((null))
-
-getAttr -> current dir name: a
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-
-myfs_getattr(path="/hello", statbuf=0x0946dc10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-ID: e0dc3ab2-be52-4673-989e-1fbc95d6771e
- hello
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: hellowrite_readdir(path="/hello", buf=0x04004cc0, filler=0x0a763c00, offset=0, fi=0x0946dc00)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-ID: e0dc3ab2-be52-4673-989e-1fbc95d6771e
- hello
-findParent: returning parent - root
-
-getAttr -> current dir name: 
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-
-myfs_getattr(path="/hello", statbuf=0x0946dc10)
-in find parent
-parent log:(hello)
-token: hello
-dir_fcb fetched!
-ID: e0dc3ab2-be52-4673-989e-1fbc95d6771e
- hello
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: hello
-myfs_getattr(path="/", statbuf=0x0946dbe0)
-write_readdir(path="/", buf=0x04004cc0, filler=0x0a763c00, offset=0, fi=0x09c6ec00)
-in find parent
-parent log:((null))
-
-getAttr -> current dir name: a
-myfs_getattr(path="/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", statbuf=0x0946dc10)
-in find parent
-parent log:(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-dir_fcb fetched!
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: hello
-getAttr -> directory not found
-myfs_mkdir : /aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-in find parent
-parent log:(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-dir_fcb fetched!
-findParent: returning parent - root
-Base name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-ID of the dir: b12be2cd-d1b4-430a-ac19-8a6bc68f37dd
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa : aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-
-myfs_mkdir: directory aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa created!
-myfs_getattr(path="/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", statbuf=0x09c6ec10)
-in find parent
-parent log:(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-dir_fcb fetched!
-ID: b12be2cd-d1b4-430a-ac19-8a6bc68f37dd
- aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-findParent: returning parent - root
-
-getAttr -> found directory in fcb root with name: a
-getAttr -> found directory in fcb root with name: hello
-getAttr -> found directory in fcb root with name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-myfs_getattr(path="/", statbuf=0x09c6ebe0)
-write_readdir(path="/", buf=0xfc008b90, filler=0x0a763c00, offset=0, fi=0x0946dc00)
-in find parent
-parent log:((null))
-
+getAttr -> found directory in fcb parent with name: amyfs_open(path"/a", fi=0x76152cc0)
+myfs_read(path="/a", buf=0x70004d30, size=4096, offset=0, fi=0x76953cc0)
+myfs_read(path="/a", buf=0x68000af0, size=4096, offset=0, fi=0x76152cc0)
+myfs_flush(path="/a", fi=0x76953cc0)
+myfs_release(path="/a", fi=0x76152cc0)

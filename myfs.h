@@ -1,7 +1,7 @@
 #include "fs.h"
 
 #define MY_MAX_PATH 100
-#define MY_MAX_FILE_SIZE 1000
+#define MAX_FILE_SIZE 1000
 #define MAX_ENTRY_SIZE 10
 #define MAX_PATH_SIZE 255
 #define MAX_NAME_SIZE 255
@@ -29,3 +29,9 @@ typedef struct dir_fcb {
 	uuid_t entryIds[MAX_ENTRY_SIZE];
 
 } dir_fcb;
+
+typedef struct fcb {
+	uuid_t id;
+	uint8_t data[MAX_FILE_SIZE];
+
+} fcb;
