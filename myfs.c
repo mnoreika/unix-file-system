@@ -132,19 +132,21 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 	else {
 		i_node parent;
 	
-		path++;
+		
 
 		char *target_name;
 		char path_cp[strlen(path) + 1];
+		char path_cp2[strlen(path) + 1];
 
 		strcpy(path_cp, path);
+		strcpy(path_cp2, path);
 
 		target_name = basename(path_cp);
 
 		char *parentPath;
-		parentPath = dirname(path_cp);
+		parentPath = dirname(path_cp2);
 
-		path--;
+	
 
 		int found = findTargetInode(parentPath, &parent);
 
@@ -616,11 +618,13 @@ int myfs_unlink(const char *path){
 	char *target_name;
 
 	char path_cp[strlen(path) + 1];
+	char path_cp2[strlen(path) + 1];
 
 	strcpy(path_cp, path);
+	strcpy(path_cp2, path);
 	
 	parentPath = dirname(path_cp);
-	target_name = basename(path_cp);
+	target_name = basename(path_cp2);
 
 	write_log("Target name: %s", target_name);
 
