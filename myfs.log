@@ -1,20 +1,66 @@
 
-myfs_getattr(path="/.Trash", statbuf=0xfd658c10)
+myfs_getattr(path="/.Trash", statbuf=0x2b9b0c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0xfde59c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x2c1b1c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash", statbuf=0xfd658c10)
+myfs_getattr(path="/.Trash", statbuf=0x2b9b0c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0xfde59c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x2c1b1c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/", statbuf=0xfd658be0)
-write_readdir(path="/", buf=0xf8000b00, filler=0xfe94ec00, offset=0, fi=0xfd658c00)
+myfs_getattr(path="/", statbuf=0x2b9b0be0)
+write_readdir(path="/", buf=0x24000b00, filler=0x2cca6c00, offset=0, fi=0x2b9b0c00)
+
+getAttr -> current dir name: 
+myfs_getattr(path="/a", statbuf=0x2c1b1c10)
+
+getAttr -> directory not found
+
+myfs_mkdir : /a
+Base name: a
+ID of the dir: 59c66d0f-ee01-4a5c-9cb6-e3419832558b
+myfs_mkdir: directory created!
+myfs_mkdir: dir entry has been found and occupied
+myfs_mkdir: name of the dir:  a : a
+
+myfs_mkdir: directory a created!
+myfs_getattr(path="/a", statbuf=0x2b9b0c10)
+
+getAttr -> found directory in fcb parent with name: a
+myfs_getattr(path="/", statbuf=0x2b9b0be0)
+write_readdir(path="/", buf=0x24000b00, filler=0x2cca6c00, offset=0, fi=0x2c1b1c00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/b", statbuf=0x2b9b0c10)
+
+getAttr -> found directory in fcb parent with name: a
+getAttr -> directory not found
+
+myfs_mkdir : /b
+Base name: b
+ID of the dir: 24461fc0-1f6d-4cd3-b0c4-78a7cec8e2f6
+myfs_mkdir: directory created!
+myfs_mkdir: dir entry has been found and occupied
+myfs_mkdir: name of the dir:  b : b
+
+myfs_mkdir: directory b created!
+myfs_getattr(path="/b", statbuf=0x2c1b1c10)
+
+getAttr -> found directory in fcb parent with name: a
+getAttr -> found directory in fcb parent with name: b
+myfs_getattr(path="/", statbuf=0x2c1b1be0)
+write_readdir(path="/", buf=0x1c000990, filler=0x2cca6c00, offset=0, fi=0x2b9b0c00)
+
+getAttr -> current dir name: a
+myfs_getattr(path="/a", statbuf=0x2c1b1c10)
+
+getAttr -> found directory in fcb parent with name: a
+myfs_getattr(path="/a", statbuf=0x2b9b0c10)
 

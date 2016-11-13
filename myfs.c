@@ -54,6 +54,8 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 int findTargetInode(const char* path, i_node* buff) {
 	char cp_path[MAX_NAME_SIZE];
 
+	path++;
+
 	strcpy(cp_path, path);
 
 	char* token = strtok(cp_path, "/");
@@ -129,6 +131,7 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 	} 
 	else {
 		i_node parent;
+	
 		path++;
 
 		char *target_name;
@@ -140,6 +143,8 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 
 		char *parentPath;
 		parentPath = dirname(path_cp);
+
+		path--;
 
 		int found = findTargetInode(parentPath, &parent);
 
@@ -257,7 +262,7 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 		return -ENAMETOOLONG;
 	}
 
-	path++;
+
 
 	write_log("myfs_create: path - %s\n", path);
 
@@ -331,7 +336,7 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 // Read 'man 2 utime'.
 static int myfs_utime(const char *path, struct utimbuf *ubuf){
     write_log("myfs_utime(path=\"%s\", ubuf=0x%08x)\n", path, ubuf);
-    path++;
+
 
     i_node current;
 
@@ -404,7 +409,6 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 		return -EFBIG;
 	}
 
-	path++;
 
 	// Getting the inode of the file
 	i_node target;
@@ -520,7 +524,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	// Find directory that is the parent directory ! IMPLEMENT !
 	i_node parent;
 
-	path++;
+
 
 
 	if (findTargetInode(path, &parent) != 0) {
@@ -604,7 +608,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 // Read 'man 2 unlink'.
 int myfs_unlink(const char *path){
 	write_log("myfs_unlink: %s\n",path);
-	path++;
+	
 
 	i_node parent;
 
@@ -646,7 +650,7 @@ int myfs_unlink(const char *path){
 int myfs_rmdir(const char *path) {
     write_log("myfs_rmdir: %s\n",path);
 
-    path++;
+  
 
     i_node target;
 
