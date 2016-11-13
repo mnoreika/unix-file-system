@@ -1,173 +1,20 @@
 
-myfs_getattr(path="/.Trash", statbuf=0x5f280c10)
+myfs_getattr(path="/.Trash", statbuf=0xfd658c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0x5fa81c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xfde59c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash", statbuf=0x5f280c10)
+myfs_getattr(path="/.Trash", statbuf=0xfd658c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0x5fa81c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0xfde59c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/", statbuf=0x5f280be0)
-write_readdir(path="/", buf=0x58000b00, filler=0x60576c00, offset=0, fi=0x5f280c00)
-
-getAttr -> current dir name: 
-myfs_getattr(path="/b", statbuf=0x5fa81c10)
-
-getAttr -> directory not found
-
-myfs_mkdir : /b
-Base name: b
-ID of the dir: d0a4bdda-d55e-4ad1-8a66-c6283080a265
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  b : b
-
-myfs_mkdir: directory b created!
-myfs_getattr(path="/b", statbuf=0x5f280c10)
-
-getAttr -> found directory in fcb parent with name: b
-myfs_getattr(path="/", statbuf=0x5f280be0)
-write_readdir(path="/", buf=0x58000b00, filler=0x60576c00, offset=0, fi=0x5fa81c00)
-
-getAttr -> current dir name: b
-myfs_getattr(path="/b", statbuf=0x5f280c10)
-
-getAttr -> found directory in fcb parent with name: bmyfs_rmdir: /b
-
-Trying to fetch 
-
-Fetch succesfull
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-
-FHey
-myfs_unlink: /b
-Target name: bLooping... 
-Found data and trying to delete: 
-
-myfs_getattr(path="/", statbuf=0x5f280be0)
-write_readdir(path="/", buf=0x58000b00, filler=0x60576c00, offset=0, fi=0x5fa81c00)
-
-getAttr -> current dir name: 
-myfs_getattr(path="/b", statbuf=0x5f280c10)
-
-getAttr -> directory not found
-myfs_create(path="/b", mode=0100664, fi=0x5fa81cc0)
-myfs_create: path - b
-
-myfs_create: file entry has been found and occupied
-
-myfs_create: name of the file:  (b) 
-
-myfs_create: file created succesfully
-
-myfs_getattr(path="/b", statbuf=0x5fa81bd0)
-
-getAttr -> found directory in fcb parent with name: bmyfs_flush(path="/b", fi=0x5f280cc0)
-myfs_utime(path="/b", ubuf=0x5fa81a80)
-
-myfs_getattr(path="/b", statbuf=0x5fa81b40)
-
-getAttr -> found directory in fcb parent with name: bmyfs_flush(path="/b", fi=0x5f280cc0)
-myfs_release(path="/b", fi=0x5fa81cc0)
-
-myfs_getattr(path="/", statbuf=0x5fa81be0)
-write_readdir(path="/", buf=0x50000990, filler=0x60576c00, offset=0, fi=0x5f280c00)
-
-getAttr -> current dir name: b
-myfs_getattr(path="/b", statbuf=0x5f280c10)
-
-getAttr -> found directory in fcb parent with name: bmyfs_unlink: /b
-Target name: bLooping... 
-Found data and trying to delete: 
-
-myfs_getattr(path="/", statbuf=0x5f280be0)
-write_readdir(path="/", buf=0x58000b00, filler=0x60576c00, offset=0, fi=0x5fa81c00)
-
-getAttr -> current dir name: 
-myfs_getattr(path="/test1", statbuf=0x5f280c10)
-
-getAttr -> directory not found
-myfs_create(path="/test1", mode=0100664, fi=0x5fa81cc0)
-myfs_create: path - test1
-
-myfs_create: file entry has been found and occupied
-
-myfs_create: name of the file:  (test1) 
-
-myfs_create: file created succesfully
-
-myfs_getattr(path="/test1", statbuf=0x5fa81bd0)
-
-getAttr -> found directory in fcb parent with name: test1myfs_flush(path="/test1", fi=0x5f280cc0)
-myfs_utime(path="/test1", ubuf=0x5fa81a80)
-
-myfs_getattr(path="/test1", statbuf=0x5fa81b40)
-
-getAttr -> found directory in fcb parent with name: test1myfs_flush(path="/test1", fi=0x5f280cc0)
-myfs_release(path="/test1", fi=0x5fa81cc0)
-
-myfs_getattr(path="/test1", statbuf=0x5f280c10)
-
-getAttr -> found directory in fcb parent with name: test1myfs_open(path"/test1", fi=0x5fa81cc0)
-
-myfs_getattr(path="/test1", statbuf=0x5f280b40)
-
-getAttr -> found directory in fcb parent with name: test1myfs_flush(path="/test1", fi=0x5fa81cc0)
-myfs_write(path="/test1", buf=0x60b83060, size=4, offset=0, fi=0x5f280d30)
-Writting to file... 
-File written succesfully.
-myfs_flush(path="/test1", fi=0x5fa81cc0)
-myfs_release(path="/test1", fi=0x5f280cc0)
-
-myfs_getattr(path="/", statbuf=0x5f280be0)
-write_readdir(path="/", buf=0x58000b00, filler=0x60576c00, offset=0, fi=0x5fa81c00)
-
-getAttr -> current dir name: test1
-myfs_getattr(path="/test1", statbuf=0x5f280be0)
-
-getAttr -> found directory in fcb parent with name: test1
-myfs_getattr(path="/test1", statbuf=0x5fa81c10)
-
-getAttr -> found directory in fcb parent with name: test1myfs_open(path"/test1", fi=0x5f280cc0)
-myfs_read(path="test1", buf=0x58000da0, size=4096, offset=0, fi=0x5fa81cc0)
-Reading the file... 
-
-myfs_getattr(path="/test1", statbuf=0x5f280be0)
-
-getAttr -> found directory in fcb parent with name: test1myfs_flush(path="/test1", fi=0x5fa81cc0)
-myfs_release(path="/test1", fi=0x5f280cc0)
-
-myfs_getattr(path="/test1", statbuf=0x5fa81c10)
-
-getAttr -> found directory in fcb parent with name: test1myfs_unlink: /test1
-Target name: test1Looping... 
-Found data and trying to delete: 
-
-myfs_getattr(path="/", statbuf=0x5fa81be0)
-write_readdir(path="/", buf=0x50000990, filler=0x60576c00, offset=0, fi=0x5f280c00)
+myfs_getattr(path="/", statbuf=0xfd658be0)
+write_readdir(path="/", buf=0xf8000b00, filler=0xfe94ec00, offset=0, fi=0xfd658c00)
 

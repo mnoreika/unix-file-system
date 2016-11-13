@@ -1,10 +1,13 @@
 #include "fs.h"
 
 #define MY_MAX_PATH 100
-#define MAX_FILE_SIZE 1000
 #define MAX_ENTRY_SIZE 10
 #define MAX_PATH_SIZE 255
 #define MAX_NAME_SIZE 255
+#define MAX_BLOCK_SIZE 4096
+#define MAX_BLOCK_NUMBER 12
+#define FIRST_INDIRECT_ENTRY_NUMBER 1024
+#define MAX_FILE_SIZE MAX_BLOCK_NUMBER * FIRST_INDIRECT_ENTRY_NUMBER * MAX_BLOCK_SIZE
 
 // Index node data struct, which contains meta information about the file
 typedef struct inode_struct {
@@ -30,8 +33,22 @@ typedef struct dir_fcb {
 
 } dir_fcb;
 
+
+// Data structures that describe storage of files
 typedef struct fcb {
-	uuid_t id;
-	uint8_t data[MAX_FILE_SIZE];
+	uuid_t direct_blocks[MAX_BLOCK_NUMBER];
+	uuid_t single_indirect_blocks;
 
 } fcb;
+
+
+typedef struct {
+	uint8_t data[MAX_BLOCK_SIZE];
+
+} data_block;
+
+
+typedef struct {
+	uuid_t blocks[1024];
+
+} single_indirect;

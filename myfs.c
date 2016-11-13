@@ -96,7 +96,7 @@ int findTargetInode(const char* path, i_node* buff) {
 		if (is_found == 0)
 			break;
 		
-		token = strtok(NULL, "/s");
+		token = strtok(NULL, "/");
 	}
 
 	// When token is 1, current inode is root
@@ -218,31 +218,31 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 static int myfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	(void) fi;
 
-	path++;
+	// path++;
 
-	write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
+	// write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	i_node target;
+	// i_node target;
 
-	findTargetInode(path, &target);
+	// findTargetInode(path, &target);
 
-	fcb target_fcb;
+	// fcb target_fcb;
 
-	write_log("Reading the file... \n");
+	// write_log("Reading the file... \n");
 
-	fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
+	// fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
 
-	size_t len = target.size;
+	// size_t len = target.size;
 
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
+	// if (offset < len) {
+	// 	if (offset + size > len)
+	// 		size = len - offset;
 
-		memcpy(buf, &target_fcb.data + offset, size);
-	} else
-		size = 0;
+	// 	// memcpy(buf, &target_fcb.data + offset, size);
+	// } else
+	// 	size = 0;
 
-	return size;
+	return 0;
 }
 
 // This file system only supports one file. Create should fail if a file has been created. Path must be '/<something>'.
@@ -294,11 +294,9 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
 			memset(&new_file_fcb, 0, sizeof(new_file_fcb));
 
-			uuid_generate(new_file_fcb.id);
+			uuid_generate(new_file.data_id);
 
-			uuid_copy(new_file.data_id, new_file_fcb.id);
-
-			store_data(new_file_fcb.id, &new_file_fcb, sizeof(new_file_fcb));
+			store_data(new_file.data_id, &new_file_fcb, sizeof(new_file_fcb));
 
 			write_log("\nmyfs_create: file entry has been found and occupied\n");
 
@@ -306,9 +304,13 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
 			struct fuse_context *context = fuse_get_context();
 
+			time_t current_time = time(NULL);
 			new_file.uid = context->uid;
 			new_file.gid = context->gid;
 			new_file.mode = mode | S_IFREG;
+			new_file.atime = current_time;
+			new_file.ctime = current_time;
+			new_file.mtime = current_time;			
 
 			// Storing the file's inode in the database
 			store_data(new_file.id, &new_file, sizeof(i_node));
@@ -343,47 +345,126 @@ static int myfs_utime(const char *path, struct utimbuf *ubuf){
     return 0;
 }
 
+
+// Write data to a single block
+int write_to_block(off_t offset, uuid_t block_id, const char *data, size_t size) {
+	data_block block;
+	memset(&block, 0, sizeof(data_block));
+
+	if (size >= MAX_BLOCK_SIZE)
+		size = MAX_BLOCK_SIZE;
+
+	write_log("Writing to a new block... \n");
+
+	int written = snprintf(block.data + offset, size, data);
+
+	store_data(block_id, &block, sizeof(data_block));
+
+	
+
+	return written;
+}
+
+// Write data to first indirect blocks
+int write_to_indirect_blocks(uuid_t id, size_t size, const char* data, off_t offset) {
+	single_indirect indirect_blocks;
+	fetch_data(id, &indirect_blocks, sizeof(single_indirect));
+
+	write_log("Writting data to single indirect blocks... \n");
+
+	int start_index = offset / MAX_BLOCK_SIZE;
+
+	int written = 0;
+	int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_NAME_SIZE);
+
+	for (int i = start_index; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
+		uuid_generate(indirect_blocks.blocks[i]);
+
+		written += write_to_block(start_index, indirect_blocks.blocks[i], data, size);
+		size -= written;
+
+		data += written;
+
+		if (size <= 0)
+			break;
+	}
+
+	store_data(id, &indirect_blocks, sizeof(single_indirect));
+
+	return written;
+}
+
 // Write to a file.
 // Read 'man 2 write'
 static int myfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
     write_log("myfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	if(size >= MAX_FILE_SIZE){
+	if (size >= MAX_FILE_SIZE){
 		write_log("myfs_write - EFBIG");
 		return -EFBIG;
 	}
 
 	path++;
 
-
-	// Getting the inode of the parent
+	// Getting the inode of the file
 	i_node target;
 
 	findTargetInode(path, &target);
 
-	// Fetching the dir fcb of the parent
+	// Fetching the dir fcb of the file
 	fcb target_fcb;
-
 
 	fetch_data(target.data_id, &target_fcb, sizeof(fcb));
 
 	write_log("Writting to file... \n");
 
-	int written = snprintf(target_fcb.data, MAX_FILE_SIZE, buf);
+	int written_in_total = 0;
 
-	target.size = written;
-	time_t now = time(NULL);
-	target.mtime = now;
-	target.ctime = now;
+	if (offset / MAX_BLOCK_SIZE < MAX_BLOCK_NUMBER) {
+		int start_index = offset / MAX_BLOCK_SIZE;
+		int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_NAME_SIZE);
 
-	store_data(target.id, &target, sizeof(i_node));
-	store_data(target_fcb.id, &target_fcb, sizeof(fcb));
+		if (offset % MAX_BLOCK_SIZE == 0)
+			 start_index++;
 
-	
+		for (int i = start_index; i < MAX_BLOCK_NUMBER; i++) {
+            uuid_generate(target_fcb.direct_blocks[i]);
 
-	write_log("File written succesfully.\n");
+            write_log("Printing size: %d\n", size);
 
-    return written; //return written
+			int written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size);
+			written_in_total += written;
+			size -= written;
+
+			write_log("Printing size: %d\n", size);
+
+			buf += written;
+
+			if (size <= 0)
+				break;
+		}	
+
+		if (size > 0) {
+			uuid_generate(target_fcb.single_indirect_blocks);
+
+			written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, 0);
+		}
+
+	}
+
+	// If offset exceeds the direct block storage capacity
+	else {
+		offset -= MAX_BLOCK_SIZE * MAX_BLOCK_NUMBER;
+
+		written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, offset);
+	}
+
+	// Saving the target fcb to the database
+	store_data(target.data_id, &target_fcb, sizeof(fcb));
+
+	write_log("File written succesfully. \n");
+
+	return written_in_total;
 }
 
 // Set the size of a file.
