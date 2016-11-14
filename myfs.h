@@ -1,8 +1,6 @@
 #include "fs.h"
 
-#define MY_MAX_PATH 100
-#define MAX_ENTRY_SIZE 10
-#define MAX_PATH_SIZE 255
+#define MAX_ENTRY_SIZE 15
 #define MAX_NAME_SIZE 255
 #define MAX_BLOCK_SIZE 4
 #define MAX_BLOCK_NUMBER 12
