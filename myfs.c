@@ -219,7 +219,7 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 	return 0;
 }
 
-int read_single_block(uuid_t block_id, char* buf, size_t size, off_t offset) {
+int read_single_block(uuid_t block_id, char* buf, size_t size) {
 	data_block block;
 	fetch_data(block_id, &block, sizeof(data_block));
 
@@ -228,7 +228,7 @@ int read_single_block(uuid_t block_id, char* buf, size_t size, off_t offset) {
 	if (size > MAX_BLOCK_SIZE)
 		read_size = MAX_BLOCK_SIZE;
 
-	memcpy(buf, &block.data + offset, read_size );
+	memcpy(buf, &block.data, read_size);
 
 	write_log("Data read: %s\n", block.data);
 
@@ -246,25 +246,12 @@ int read_single_indirect_block(uuid_t id, char* buf, size_t size, off_t offset) 
 	int data_available = size;
 
 	write_log("Reading indirect blocks... ");
-	write_log("Reading offset: %d", offset);
 
-
-	int start_index = (offset / MAX_BLOCK_SIZE);
-	int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
-	for (int i = start_index; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
+	for (int i = 0; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
 		if (data_available > 0) {
 
-			
-			int size_to_read = size - read_in_total;
-
 			write_log("Reading indirect block : %d\n", i);
-			write_log("Relative offset: %d", relative_offset);
-
-			if (i != start_index)
-				relative_offset = 0;
-
-			int read = read_single_block(indirect_blocks.blocks[i], buf + read_in_total, size_to_read, offset);
-
+			int read = read_single_block(indirect_blocks.blocks[i], buf + read_in_total, size);
 
 			write_log("Indirect block read: %d\n", i);
 
@@ -305,52 +292,36 @@ static int myfs_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
 
+
+
 	int read_in_total = 0;
 	int data_available = target.size;
 
-	if (offset / MAX_BLOCK_SIZE < MAX_BLOCK_NUMBER) {
-		int start_index = (offset / MAX_BLOCK_SIZE);
-		int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
+	for (int i = 0; i < MAX_BLOCK_NUMBER; i++) {
 
-		for (int i = start_index; i < MAX_BLOCK_NUMBER; i++) {
-			if (data_available > 0) {
-				write_log("Reading block: %d\n", i);
+		if (data_available > 0) {
 
-				// int size_to_read = 0;
-				// if (data_available > MAX_BLOCK_SIZE)
-				// 	size_to_read = MAX_BLOCK_SIZE - relative_offset;
-				// else
-				// 	size_to_read = data_available - relative_offset;
-				int size_to_read = size - read_in_total;
+			write_log("Reading block: %d\n", i);
+			int read = read_single_block(target_fcb.direct_blocks[i], buf + read_in_total, size);
 
-				if (i != start_index)
-					relative_offset = 0;
+			write_log("Block read: %d\n", i);
 
-				int	read = read_single_block(target_fcb.direct_blocks[i], buf + read_in_total, size_to_read, relative_offset);
+			data_available -= read;
+			read_in_total += read;
 
-				write_log("Block read: %d\n", i);
-
-				data_available -= read;
-				read_in_total += read;
-
-			}
-			else
-				break;
-
-			if (read_in_total >= size)
-				break;
 		}
+		else
+			break;
 
-		if (read_in_total < size && data_available > 0) 
-			read_in_total += read_single_indirect_block(target_fcb.single_indirect_blocks, buf + read_in_total, data_available, 0);
-	}	
+		
 
-	else {
-		offset -= MAX_BLOCK_SIZE * MAX_BLOCK_NUMBER;
-
-		read_in_total += read_single_indirect_block(target_fcb.single_indirect_blocks, buf, data_available, offset);
+		if (read_in_total >= size)
+			break;
 	}
-	
+
+	if (read_in_total < size && data_available > 0) 
+		read_in_total += read_single_indirect_block(target_fcb.single_indirect_blocks, buf + read_in_total, data_available, offset);
+
 
 	return read_in_total;
 }
@@ -547,7 +518,6 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 		return -EFBIG;
 	}
 
-
 	// Getting the inode of the file
 	i_node target;
 
@@ -602,7 +572,7 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 		if (written_in_total < size) {
 
 			uuid_generate(target_fcb.single_indirect_blocks);
-
+			
 			written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, 0);
 		}
 
@@ -614,13 +584,6 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 
 		written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, offset);
 	}
-
-	// if (offset > size)
-	// 	target.size += (offset - target.size) + written_in_total;
-	// else if (offset == size)
-	// 	target.size += written_in_total;
-	// else
-	// 	target.size += written_in_total - (size - offset);
 
 	target.size = written_in_total;
 
