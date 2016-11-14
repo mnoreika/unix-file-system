@@ -42,6 +42,10 @@ void fetch_data(uuid_t data_id, void* dataStorage, size_t size) {
 // Storing data into the database
 void store_data(uuid_t data_id, void* data, size_t size) {
 	int rc = unqlite_kv_store(pDb, data_id, KEY_SIZE, data, size);
+	
+	// Updating the checked root
+	if (uuid_compare(data_id, root_node.id) == 0)
+		memcpy(&root_node, data, sizeof(i_node));
 
 
 	if( rc != UNQLITE_OK ) {
@@ -124,6 +128,7 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		stbuf->st_ctime = root_node.ctime;
 		stbuf->st_atime = root_node.atime;
 		stbuf->st_mtime = root_node.mtime;
+		stbuf->st_size = root_node.size;
 
 		return 0;
 	} 
@@ -392,7 +397,11 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 			new_file.atime = current_time;
 			new_file.ctime = current_time;
 			new_file.mtime = current_time;	
-			new_file.size = 0;		
+			new_file.size = 0;	
+
+			parent.size++;
+
+			store_data(parent.id, &parent, sizeof(i_node));	
 
 			// Storing the file's inode in the database
 			store_data(new_file.id, &new_file, sizeof(i_node));
@@ -657,7 +666,7 @@ int myfs_mkdir(const char *path, mode_t mode) {
 		return -ENAMETOOLONG;
 	}
 
-	// Find directory that is the parent directory ! IMPLEMENT !
+	// Find directory that is the parent directory 
 	i_node parent;
 
 
@@ -673,40 +682,6 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	write_log("Base name: %s\n", dirname);
 
-	
-	// Creating an inode for the next directory
-	i_node new_dir;
-
-	uuid_generate(new_dir.id);
-
-	// Creating a dir file control block for the new directory
-	dir_fcb new_dir_entries;
-
-	memset(&new_dir_entries, 0, sizeof(dir_fcb));
-
-	uuid_generate(new_dir_entries.id);
-
-	uuid_copy(new_dir.data_id, new_dir_entries.id);
-
-	store_data(new_dir.data_id, &new_dir_entries, sizeof(dir_fcb));
-
-	// Getting context of the current environment
-	struct fuse_context *context = fuse_get_context();
-	time_t current_time = time(NULL);
-	
-	// Setting the context parameters for the new directory
-	new_dir.uid = context->uid;
-	new_dir.gid = context->gid;
-	new_dir.mode = mode | S_IFDIR;
-	new_dir.atime = current_time;
-	new_dir.ctime = current_time;
-	new_dir.mtime = current_time;
-	new_dir.size = 0;
-
-	write_log("ID of the dir: %s", get_UUID(new_dir.id));
-
-	// Storing the inode of the new directory in the database
-	store_data(new_dir.id, &new_dir, sizeof(i_node));
 
 	// Adding the new directory as an entry in the parent directory
 	dir_fcb parent_fcb;  
@@ -721,17 +696,55 @@ int myfs_mkdir(const char *path, mode_t mode) {
 	for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 		if (strcmp("", parent_fcb.entryNames[i]) == 0) {
+			// Creating an inode for the next directory
+			i_node new_dir;
+
+			uuid_generate(new_dir.id);
+
+			// Creating a dir file control block for the new directory
+			dir_fcb new_dir_entries;
+
+			memset(&new_dir_entries, 0, sizeof(dir_fcb));
+
+			uuid_generate(new_dir_entries.id);
+
+			uuid_copy(new_dir.data_id, new_dir_entries.id);
+
+			store_data(new_dir.data_id, &new_dir_entries, sizeof(dir_fcb));
+
+			// Getting context of the current environment
+			struct fuse_context *context = fuse_get_context();
+			time_t current_time = time(NULL);
+			
+			// Setting the context parameters for the new directory
+			new_dir.uid = context->uid;
+			new_dir.gid = context->gid;
+			new_dir.mode = mode | S_IFDIR;
+			new_dir.atime = current_time;
+			new_dir.ctime = current_time;
+			new_dir.mtime = current_time;
+			new_dir.size = 0;
+
+			write_log("ID of the dir: %s", get_UUID(new_dir.id));
+
+			// Storing the inode of the new directory in the database
+			store_data(new_dir.id, &new_dir, sizeof(i_node));	
+
 			strcpy(parent_fcb.entryNames[i], dirname);
 			uuid_copy(parent_fcb.entryIds[i], new_dir.id);
 			write_log("\nmyfs_mkdir: dir entry has been found and occupied");
 
 			write_log("\nmyfs_mkdir: name of the dir:  %s : %s\n", &parent_fcb.entryNames[i], dirname);
+
+			parent.size++;
 			break;
 		}
 
 	}
 
 	store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
+
+	store_data(parent.id, &parent, sizeof(i_node));
 
 	write_log("\nmyfs_mkdir: directory %s created!", dirname);
 
@@ -773,7 +786,9 @@ int myfs_unlink(const char *path){
 			write_log("Found data and trying to delete: \n");
 			memset(&parent_fcb.entryNames[i], 0, sizeof(char) * MAX_NAME_SIZE);
 
+			parent.size--;
 			store_data(parent.data_id, &parent_fcb, sizeof(dir_fcb));
+			store_data(parent.id, &parent, sizeof(i_node));
 			return 0;
 		}
 	}
@@ -801,15 +816,14 @@ int myfs_rmdir(const char *path) {
     write_log("\nFetch succesfull\n");
 
     for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
-    	write_log("\nFHey\n");
+
     	if (strcmp("", target_dir_fcb.entryNames[i]) != 0) {
     		return -ENOTEMPTY;
     		
     	}
     }
 
-    path--;
-
+ 
     myfs_unlink(path);
 
     return 0;
