@@ -54,8 +54,6 @@ void store_data(uuid_t data_id, void* data, size_t size) {
 int findTargetInode(const char* path, i_node* buff) {
 	char cp_path[MAX_NAME_SIZE];
 
-	path++;
-
 	strcpy(cp_path, path);
 
 	char* token = strtok(cp_path, "/");
@@ -67,7 +65,7 @@ int findTargetInode(const char* path, i_node* buff) {
 	int tokenCount = 0; 
 
 	// Returning root if path has no tokens
-	if (token == NULL) {
+	if (token == NULL || strcmp(path, "/") == 0) {
 		memcpy(buff, &root_node, sizeof(i_node));
 		return 0;
 	}
@@ -160,7 +158,7 @@ static int myfs_getattr(const char *path, struct stat *stbuf) {
 		for (int i = 0; i < MAX_ENTRY_SIZE; i++) {
 
 			if (strcmp(parent_dir_fcb.entryNames[i], "") != 0) {
-				write_log("\ngetAttr -> found directory in fcb parent with name: %s", parent_dir_fcb.entryNames[i]);
+				write_log("\ngetAttr -> found entry in fcb parent with name: %s", parent_dir_fcb.entryNames[i]);
 				
 
 				if (strcmp(parent_dir_fcb.entryNames[i], target_name) == 0) {
@@ -221,35 +219,140 @@ static int myfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 	return 0;
 }
 
+int read_single_block(uuid_t block_id, char* buf, size_t size, off_t offset) {
+	data_block block;
+	fetch_data(block_id, &block, sizeof(data_block));
+
+	int read_size = size;
+
+	if (size > MAX_BLOCK_SIZE)
+		read_size = MAX_BLOCK_SIZE;
+
+	memcpy(buf, &block.data + offset, read_size );
+
+	write_log("Data read: %s\n", block.data);
+
+	return read_size;
+
+}
+
+
+int read_single_indirect_block(uuid_t id, char* buf, size_t size, off_t offset) {
+	single_indirect indirect_blocks;
+
+	fetch_data(id, &indirect_blocks, sizeof(single_indirect));
+
+	int read_in_total = 0;
+	int data_available = size;
+
+	write_log("Reading indirect blocks... ");
+	write_log("Reading offset: %d", offset);
+
+
+	int start_index = (offset / MAX_BLOCK_SIZE);
+	int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
+	for (int i = start_index; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
+		if (data_available > 0) {
+
+			
+			int size_to_read = size - read_in_total;
+
+			write_log("Reading indirect block : %d\n", i);
+			write_log("Relative offset: %d", relative_offset);
+
+			if (i != start_index)
+				relative_offset = 0;
+
+			int read = read_single_block(indirect_blocks.blocks[i], buf + read_in_total, size_to_read, offset);
+
+
+			write_log("Indirect block read: %d\n", i);
+
+			data_available -= read;
+			read_in_total += read;
+
+		}
+		else {
+			write_log("Last read log: %d", i);
+			break;
+		}
+
+		if (read_in_total >= size)
+			break;
+	}
+
+
+	return read_in_total;
+}
+
 // Read a file.
-static int myfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+static int myfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	(void) fi;
 
-	// path++;
+	write_log("\nmyfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
-	// write_log("myfs_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
+	i_node target;
 
-	// i_node target;
+	if (findTargetInode(path, &target) != 0) {
+		write_log("Failed to fetch the target...\n");
+	}
 
-	// findTargetInode(path, &target);
+	findTargetInode(path, &target);
 
-	// fcb target_fcb;
+	fcb target_fcb;
 
-	// write_log("Reading the file... \n");
+	write_log("Reading the file... \n");
 
-	// fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
+	fetch_data(target.data_id, &target_fcb, sizeof(target_fcb));
 
-	// size_t len = target.size;
+	int read_in_total = 0;
+	int data_available = target.size;
 
-	// if (offset < len) {
-	// 	if (offset + size > len)
-	// 		size = len - offset;
+	if (offset / MAX_BLOCK_SIZE < MAX_BLOCK_NUMBER) {
+		int start_index = (offset / MAX_BLOCK_SIZE);
+		int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
 
-	// 	// memcpy(buf, &target_fcb.data + offset, size);
-	// } else
-	// 	size = 0;
+		for (int i = start_index; i < MAX_BLOCK_NUMBER; i++) {
+			if (data_available > 0) {
+				write_log("Reading block: %d\n", i);
 
-	return 0;
+				// int size_to_read = 0;
+				// if (data_available > MAX_BLOCK_SIZE)
+				// 	size_to_read = MAX_BLOCK_SIZE - relative_offset;
+				// else
+				// 	size_to_read = data_available - relative_offset;
+				int size_to_read = size - read_in_total;
+
+				if (i != start_index)
+					relative_offset = 0;
+
+				int	read = read_single_block(target_fcb.direct_blocks[i], buf + read_in_total, size_to_read, relative_offset);
+
+				write_log("Block read: %d\n", i);
+
+				data_available -= read;
+				read_in_total += read;
+
+			}
+			else
+				break;
+
+			if (read_in_total >= size)
+				break;
+		}
+
+		if (read_in_total < size && data_available > 0) 
+			read_in_total += read_single_indirect_block(target_fcb.single_indirect_blocks, buf + read_in_total, data_available, 0);
+	}	
+
+	else {
+		offset -= MAX_BLOCK_SIZE * MAX_BLOCK_NUMBER;
+
+		read_in_total += read_single_indirect_block(target_fcb.single_indirect_blocks, buf, data_available, offset);
+	}
+	
+
+	return read_in_total;
 }
 
 // This file system only supports one file. Create should fail if a file has been created. Path must be '/<something>'.
@@ -317,7 +420,8 @@ static int myfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 			new_file.mode = mode | S_IFREG;
 			new_file.atime = current_time;
 			new_file.ctime = current_time;
-			new_file.mtime = current_time;			
+			new_file.mtime = current_time;	
+			new_file.size = 0;		
 
 			// Storing the file's inode in the database
 			store_data(new_file.id, &new_file, sizeof(i_node));
@@ -354,57 +458,89 @@ static int myfs_utime(const char *path, struct utimbuf *ubuf){
 
 
 // Write data to a single block
-int write_to_block(off_t offset, uuid_t block_id, const char *data, size_t size) {
+int write_to_block(off_t offset, uuid_t block_id, const char *data, size_t size, int new_block) {
 	data_block block;
-	memset(&block, 0, sizeof(data_block));
 
-	if (size >= MAX_BLOCK_SIZE)
-		size = MAX_BLOCK_SIZE;
+	if (new_block == 1){
+		write_log("Block was generated.\n");
+		memset(&block, 0, sizeof(data_block));
+	}
+	else {
+		write_log("Block was fetched from the database.\n");
+		fetch_data(block_id, &block, sizeof(data_block));
+	}
+
+	int local_size = size;
+
+	if (size > MAX_BLOCK_SIZE)
+		local_size = MAX_BLOCK_SIZE;
 
 	write_log("Writing to a new block... \n");
 
-	int written = snprintf(block.data + offset, size, data);
+	write_log("To write: %d\n", local_size);
+
+	snprintf(block.data + offset, local_size + 1, data);
+
+	write_log("Written to a new block: %d bytes\n", local_size);
 
 	store_data(block_id, &block, sizeof(data_block));
 
-	
-
-	return written;
+	return local_size;
 }
 
 // Write data to first indirect blocks
 int write_to_indirect_blocks(uuid_t id, size_t size, const char* data, off_t offset) {
 	single_indirect indirect_blocks;
-	fetch_data(id, &indirect_blocks, sizeof(single_indirect));
 
 	write_log("Writting data to single indirect blocks... \n");
 
-	int start_index = offset / MAX_BLOCK_SIZE;
+	memset(&indirect_blocks, 0, sizeof(single_indirect));
 
-	int written = 0;
-	int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_NAME_SIZE);
+	int start_index = (offset / MAX_BLOCK_SIZE);
+
+	int written_in_total = 0;
+		
+	int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
+
+	if (offset % MAX_BLOCK_SIZE == 0)
+		relative_offset = 0;
+
 
 	for (int i = start_index; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
-		uuid_generate(indirect_blocks.blocks[i]);
+		write_log("Writting to indirect block: %d\n", i);
 
-		written += write_to_block(start_index, indirect_blocks.blocks[i], data, size);
-		size -= written;
+		int size_to_write = size - written_in_total;
+
+		int written = 0;
+		if (uuid_compare(zero_uuid, indirect_blocks.blocks[i]) == 0) {
+			uuid_generate(indirect_blocks.blocks[i]);
+			written = write_to_block(relative_offset, indirect_blocks.blocks[i], data, size_to_write, 1);
+		}
+		else
+			written = write_to_block(relative_offset, indirect_blocks.blocks[i], data, size_to_write, 0);
+	
+
+		
+		written_in_total += written;
+		
+
+		if (written_in_total >= size) {
+			write_log("Last written log: %d", i);
+			break;
+		}
 
 		data += written;
-
-		if (size <= 0)
-			break;
 	}
 
 	store_data(id, &indirect_blocks, sizeof(single_indirect));
 
-	return written;
+	return written_in_total;
 }
 
 // Write to a file.
 // Read 'man 2 write'
 static int myfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-    write_log("myfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
+    write_log("\nmyfs_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
 	if (size >= MAX_FILE_SIZE){
 		write_log("myfs_write - EFBIG");
@@ -427,30 +563,44 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 	int written_in_total = 0;
 
 	if (offset / MAX_BLOCK_SIZE < MAX_BLOCK_NUMBER) {
-		int start_index = offset / MAX_BLOCK_SIZE;
-		int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_NAME_SIZE);
+		int start_index = (offset / MAX_BLOCK_SIZE);
+		int relative_offset = offset - ((offset / MAX_BLOCK_SIZE) * MAX_BLOCK_SIZE);
 
 		if (offset % MAX_BLOCK_SIZE == 0)
-			 start_index++;
+			relative_offset = 0;
 
 		for (int i = start_index; i < MAX_BLOCK_NUMBER; i++) {
-            uuid_generate(target_fcb.direct_blocks[i]);
-
+			
             write_log("Printing size: %d\n", size);
+            write_log("Block number: %d\n", i);
+            write_log("Relative offset: %d\n", relative_offset);
 
-			int written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size);
+            int size_to_write = size - written_in_total;
+
+			int written = 0;
+
+			//Checking if the block already exists or not
+            if (uuid_compare(zero_uuid, target_fcb.direct_blocks[i]) == 0) {
+            	uuid_generate(target_fcb.direct_blocks[i]);
+				written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size_to_write, 1);
+			}
+			else
+				written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size_to_write, 0);
+
 			written_in_total += written;
-			size -= written;
 
-			write_log("Printing size: %d\n", size);
+			write_log("Printing size after written: %d\n", size);
+			write_log("Written in total so far:: %d\n", written_in_total);
+
+			if (written_in_total >= size)
+				break;
 
 			buf += written;
 
-			if (size <= 0)
-				break;
 		}	
 
-		if (size > 0) {
+		if (written_in_total < size) {
+
 			uuid_generate(target_fcb.single_indirect_blocks);
 
 			written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, 0);
@@ -465,8 +615,21 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 		written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, offset);
 	}
 
+	// if (offset > size)
+	// 	target.size += (offset - target.size) + written_in_total;
+	// else if (offset == size)
+	// 	target.size += written_in_total;
+	// else
+	// 	target.size += written_in_total - (size - offset);
+
+	target.size = written_in_total;
+
 	// Saving the target fcb to the database
 	store_data(target.data_id, &target_fcb, sizeof(fcb));
+
+	store_data(target.id, &target, sizeof(i_node));
+
+	write_log("Written in total: %d\n", written_in_total);
 
 	write_log("File written succesfully. \n");
 
@@ -525,8 +688,6 @@ int myfs_mkdir(const char *path, mode_t mode) {
 
 	// Find directory that is the parent directory ! IMPLEMENT !
 	i_node parent;
-
-
 
 
 	if (findTargetInode(path, &parent) != 0) {

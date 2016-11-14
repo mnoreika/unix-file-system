@@ -1,39 +1,768 @@
 
-myfs_getattr(path="/.Trash", statbuf=0x76a66c10)
+myfs_getattr(path="/.Trash", statbuf=0x12541c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0x77267c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x12d42c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash", statbuf=0x76a66c10)
+myfs_getattr(path="/.Trash", statbuf=0x12541c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/.Trash-18197", statbuf=0x77267c10)
+myfs_getattr(path="/.Trash-18197", statbuf=0x12d42c10)
 
 getAttr -> directory not found
 
-myfs_getattr(path="/", statbuf=0x76a66be0)
-write_readdir(path="/", buf=0x70000b00, filler=0x77d5cc00, offset=0, fi=0x76a66c00)
+myfs_getattr(path="/", statbuf=0x12541be0)
+
+myfs_getattr(path="/", statbuf=0x12d42be0)
+write_readdir(path="/", buf=0x04000990, filler=0x13837c00, offset=0, fi=0x12d42c00)
 
 getAttr -> current dir name: 
-myfs_getattr(path="/a", statbuf=0x77267c10)
+myfs_getattr(path="/a", statbuf=0x12541c10)
 
 getAttr -> directory not found
+myfs_create(path="/a", mode=0100664, fi=0x12d42cc0)
+myfs_create: path - /a
 
-myfs_mkdir : /a
-Base name: a
-ID of the dir: b8e8951b-65d1-42d6-9588-43d1d5709ba7
-myfs_mkdir: directory created!
-myfs_mkdir: dir entry has been found and occupied
-myfs_mkdir: name of the dir:  a : a
+myfs_create: file entry has been found and occupied
 
-myfs_mkdir: directory a created!
-myfs_getattr(path="/a", statbuf=0x76a66c10)
+myfs_create: name of the file:  (a) 
 
-getAttr -> found directory in fcb parent with name: a
-myfs_getattr(path="/", statbuf=0x76a66be0)
-write_readdir(path="/", buf=0x70000b00, filler=0x77d5cc00, offset=0, fi=0x77267c00)
+myfs_create: file created succesfully
 
+myfs_getattr(path="/a", statbuf=0x12d42bd0)
+
+getAttr -> found entry in fcb parent with name: amyfs_flush(path="/a", fi=0x12541cc0)
+
+myfs_write(path="/a", buf=0x13e44060, size=5, offset=0, fi=0x12541d30)
+Writting to file... 
+Printing size: 5
+Block number: 0
+Relative offset: 0
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 5
+Written in total so far:: 4
+Printing size: 5
+Block number: 1
+Relative offset: 0
+Block was generated.
+Writing to a new block... 
+To write: 1
+Written to a new block: 1 bytes
+Printing size after written: 5
+Written in total so far:: 5
+Written in total: 5
+File written succesfully. 
+myfs_flush(path="/a", fi=0x12d42cc0)
+myfs_release(path="/a", fi=0x12541cc0)
+
+myfs_getattr(path="/a", statbuf=0x12d42c10)
+
+getAttr -> found entry in fcb parent with name: amyfs_open(path"/a", fi=0x12541cc0)
+
+myfs_read(path="/a", buf=0x0c000cc0, size=4096, offset=0, fi=0x12d42cc0)
+Reading the file... 
+Reading block: 0
+Data read: wadw
+Block read: 0
+Reading block: 1
+Data read: 
+
+Block read: 1
+
+myfs_getattr(path="/a", statbuf=0x12541be0)
+
+getAttr -> found entry in fcb parent with name: amyfs_flush(path="/a", fi=0x12d42cc0)
+myfs_release(path="/a", fi=0x12541cc0)
+
+myfs_getattr(path="/a", statbuf=0x12d42c10)
+
+getAttr -> found entry in fcb parent with name: amyfs_open(path"/a", fi=0x12541cc0)
+myfs_flush(path="/a", fi=0x12d42cc0)
+
+myfs_write(path="/a", buf=0x13e44060, size=94, offset=5, fi=0x12541d30)
+Writting to file... 
+Printing size: 94
+Block number: 1
+Relative offset: 1
+Block was fetched from the database.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 4
+Printing size: 94
+Block number: 2
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 8
+Printing size: 94
+Block number: 3
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 12
+Printing size: 94
+Block number: 4
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 16
+Printing size: 94
+Block number: 5
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 20
+Printing size: 94
+Block number: 6
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 24
+Printing size: 94
+Block number: 7
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 28
+Printing size: 94
+Block number: 8
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 32
+Printing size: 94
+Block number: 9
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 36
+Printing size: 94
+Block number: 10
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 40
+Printing size: 94
+Block number: 11
+Relative offset: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Printing size after written: 94
+Written in total so far:: 44
+Writting data to single indirect blocks... 
+Writting to indirect block: 0
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 1
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 2
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 3
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 4
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 5
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 6
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 7
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 8
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 9
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 10
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 11
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 12
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 13
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 14
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 15
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 16
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 17
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 18
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 19
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 20
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 21
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 22
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 23
+Block was generated.
+Writing to a new block... 
+To write: 2
+Written to a new block: 2 bytes
+Last written log: 23Written in total: 138
+File written succesfully. 
+myfs_flush(path="/a", fi=0x12d42cc0)
+myfs_release(path="/a", fi=0x12541cc0)
+
+myfs_getattr(path="/a", statbuf=0x12d42c10)
+
+getAttr -> found entry in fcb parent with name: amyfs_open(path"/a", fi=0x12541cc0)
+
+myfs_read(path="/a", buf=0x0c000cc0, size=4096, offset=0, fi=0x12d42cc0)
+Reading the file... 
+Reading block: 0
+Data read: wadw
+Block read: 0
+Reading block: 1
+Data read: 
+wad
+Block read: 1
+Reading block: 2
+Data read: 
+Block read: 2
+Reading block: 3
+Data read: 
+Block read: 3
+Reading block: 4
+Data read: 
+Block read: 4
+Reading block: 5
+Data read: 
+Block read: 5
+Reading block: 6
+Data read: 
+Block read: 6
+Reading block: 7
+Data read: 
+Block read: 7
+Reading block: 8
+Data read: 
+Block read: 8
+Reading block: 9
+Data read: 
+Block read: 9
+Reading block: 10
+Data read: 
+Block read: 10
+Reading block: 11
+Data read: 
+Block read: 11
+Reading indirect blocks... Reading offset: 0Reading indirect block : 0
+Relative offset: 0Data read: wdaw
+Indirect block read: 0
+Reading indirect block : 1
+Relative offset: 0Data read: dawd
+Indirect block read: 1
+Reading indirect block : 2
+Relative offset: 0Data read: awda
+Indirect block read: 2
+Reading indirect block : 3
+Relative offset: 0Data read: wdaw
+Indirect block read: 3
+Reading indirect block : 4
+Relative offset: 0Data read: dawa
+Indirect block read: 4
+Reading indirect block : 5
+Relative offset: 0Data read: wdaw
+Indirect block read: 5
+Reading indirect block : 6
+Relative offset: 0Data read: dawd
+Indirect block read: 6
+Reading indirect block : 7
+Relative offset: 0Data read: awda
+Indirect block read: 7
+Reading indirect block : 8
+Relative offset: 0Data read: wdaw
+Indirect block read: 8
+Reading indirect block : 9
+Relative offset: 0Data read: dawd
+Indirect block read: 9
+Reading indirect block : 10
+Relative offset: 0Data read: awda
+Indirect block read: 10
+Reading indirect block : 11
+Relative offset: 0Data read: wdaw
+Indirect block read: 11
+Reading indirect block : 12
+Relative offset: 0Data read: d
+
+Indirect block read: 12
+Reading indirect block : 13
+Relative offset: 0Data read: 
+Indirect block read: 13
+Reading indirect block : 14
+Relative offset: 0Data read: 
+Indirect block read: 14
+Reading indirect block : 15
+Relative offset: 0Data read: 
+Indirect block read: 15
+Reading indirect block : 16
+Relative offset: 0Data read: 
+Indirect block read: 16
+Reading indirect block : 17
+Relative offset: 0Data read: 
+Indirect block read: 17
+Reading indirect block : 18
+Relative offset: 0Data read: 
+Indirect block read: 18
+Reading indirect block : 19
+Relative offset: 0Data read: 
+Indirect block read: 19
+Reading indirect block : 20
+Relative offset: 0Data read: 
+Indirect block read: 20
+Reading indirect block : 21
+Relative offset: 0Data read: 
+Indirect block read: 21
+Reading indirect block : 22
+Relative offset: 0Data read: 
+Indirect block read: 22
+
+myfs_getattr(path="/a", statbuf=0x12541be0)
+
+getAttr -> found entry in fcb parent with name: amyfs_flush(path="/a", fi=0x12d42cc0)
+myfs_release(path="/a", fi=0x12541cc0)
+
+myfs_getattr(path="/a", statbuf=0x12d42c10)
+
+getAttr -> found entry in fcb parent with name: amyfs_open(path"/a", fi=0x12541cc0)
+myfs_flush(path="/a", fi=0x12d42cc0)
+
+myfs_write(path="/a", buf=0x13e44060, size=217, offset=138, fi=0x12541d30)
+Writting to file... 
+Writting data to single indirect blocks... 
+Writting to indirect block: 22
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 23
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 24
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 25
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 26
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 27
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 28
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 29
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 30
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 31
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 32
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 33
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 34
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 35
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 36
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 37
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 38
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 39
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 40
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 41
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 42
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 43
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 44
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 45
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 46
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 47
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 48
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 49
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 50
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 51
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 52
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 53
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 54
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 55
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 56
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 57
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 58
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 59
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 60
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 61
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 62
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 63
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 64
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 65
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 66
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 67
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 68
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 69
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 70
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 71
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 72
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 73
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 74
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 75
+Block was generated.
+Writing to a new block... 
+To write: 4
+Written to a new block: 4 bytes
+Writting to indirect block: 76
+Block was generated.
+Writing to a new block... 
+To write: 1
+Written to a new block: 1 bytes
+Last written log: 76Written in total: 217
+File written succesfully. 
+myfs_flush(path="/a", fi=0x12d42cc0)
+myfs_release(path="/a", fi=0x12541cc0)
+
+myfs_getattr(path="/a", statbuf=0x12d42c10)
+
+getAttr -> found entry in fcb parent with name: amyfs_open(path"/a", fi=0x12541cc0)
+
+myfs_read(path="/a", buf=0x0c000cc0, size=4096, offset=0, fi=0x12d42cc0)
+Reading the file... 
+Reading block: 0
+Data read: wadw
+Block read: 0
+Reading block: 1
+Data read: 
+wad
+Block read: 1
+Reading block: 2
+Data read: 
+Block read: 2
+Reading block: 3
+Data read: 
+Block read: 3
+Reading block: 4
+Data read: 
+Block read: 4
+Reading block: 5
+Data read: 
+Block read: 5
+Reading block: 6
+Data read: 
+Block read: 6
+Reading block: 7
+Data read: 
+Block read: 7
+Reading block: 8
+Data read: 
+Block read: 8
+Reading block: 9
+Data read: 
+Block read: 9
+Reading block: 10
+Data read: 
+Block read: 10
+Reading block: 11
+Data read: 
+Block read: 11
+Reading indirect blocks... Reading offset: 0Reading indirect block : 0
+Relative offset: 0
+myfs_database error - cannot fetch data
