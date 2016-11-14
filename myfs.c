@@ -450,7 +450,11 @@ int write_to_block(off_t offset, uuid_t block_id, const char *data, size_t size,
 
 	write_log("To write: %d\n", local_size);
 
+	write_log("Writable size:%d\n", local_size);
+
 	snprintf(block.data + offset, local_size + 1, data);
+
+	write_log("Data written: %.4s\n", data);
 
 	write_log("Written to a new block: %d bytes\n", local_size);
 
@@ -476,8 +480,10 @@ int write_to_indirect_blocks(uuid_t id, size_t size, const char* data, off_t off
 	if (offset % MAX_BLOCK_SIZE == 0)
 		relative_offset = 0;
 
+	write_log("Writting data to single indirect blocks... \n");
 
-	for (int i = start_index; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
+
+	for (int i = 0; i < FIRST_INDIRECT_ENTRY_NUMBER; i++) {
 		write_log("Writting to indirect block: %d\n", i);
 
 		int size_to_write = size - written_in_total;
@@ -485,22 +491,23 @@ int write_to_indirect_blocks(uuid_t id, size_t size, const char* data, off_t off
 		int written = 0;
 		if (uuid_compare(zero_uuid, indirect_blocks.blocks[i]) == 0) {
 			uuid_generate(indirect_blocks.blocks[i]);
-			written = write_to_block(relative_offset, indirect_blocks.blocks[i], data, size_to_write, 1);
+			written = write_to_block(0, indirect_blocks.blocks[i], data, size_to_write, 1);
 		}
 		else
-			written = write_to_block(relative_offset, indirect_blocks.blocks[i], data, size_to_write, 0);
+			written = write_to_block(0, indirect_blocks.blocks[i], data, size_to_write, 0);
 	
 
 		
 		written_in_total += written;
-		
+			
+		data += written;		
 
 		if (written_in_total >= size) {
 			write_log("Last written log: %d", i);
 			break;
 		}
 
-		data += written;
+		
 	}
 
 	store_data(id, &indirect_blocks, sizeof(single_indirect));
@@ -539,7 +546,7 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 		if (offset % MAX_BLOCK_SIZE == 0)
 			relative_offset = 0;
 
-		for (int i = start_index; i < MAX_BLOCK_NUMBER; i++) {
+		for (int i = 0; i < MAX_BLOCK_NUMBER; i++) {
 			
             write_log("Printing size: %d\n", size);
             write_log("Block number: %d\n", i);
@@ -552,28 +559,29 @@ static int myfs_write(const char *path, const char *buf, size_t size, off_t offs
 			//Checking if the block already exists or not
             if (uuid_compare(zero_uuid, target_fcb.direct_blocks[i]) == 0) {
             	uuid_generate(target_fcb.direct_blocks[i]);
-				written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size_to_write, 1);
+				written = write_to_block(0, target_fcb.direct_blocks[i], buf, size_to_write, 1);
 			}
 			else
-				written = write_to_block(relative_offset, target_fcb.direct_blocks[i], buf, size_to_write, 0);
+				written = write_to_block(0, target_fcb.direct_blocks[i], buf, size_to_write, 0);
 
 			written_in_total += written;
 
 			write_log("Printing size after written: %d\n", size);
 			write_log("Written in total so far:: %d\n", written_in_total);
 
+			buf += written;	
+
 			if (written_in_total >= size)
 				break;
-
-			buf += written;
 
 		}	
 
 		if (written_in_total < size) {
+			write_log("Offset jumps to inderect blocks\n");
 
 			uuid_generate(target_fcb.single_indirect_blocks);
 			
-			written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size, buf, 0);
+			written_in_total += write_to_indirect_blocks(target_fcb.single_indirect_blocks, size - written_in_total, buf, 0);
 		}
 
 	}
